@@ -142,7 +142,7 @@ export default function SettingsPage() {
                 type="file" 
                 accept=".json" 
                 onChange={handleImportTimers} 
-                className="w-full file:mr-2 file:py-2 file:px-3 sm:file:mr-4 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90" 
+                className="w-full file:mr-2 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90" 
               />
             </div>
              <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
@@ -170,4 +170,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
