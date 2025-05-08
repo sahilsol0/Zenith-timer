@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useGlobalTimer } from '@/contexts/TimerContext';
@@ -64,12 +63,11 @@ const GlobalTimerBar = () => {
         'fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg transition-transform duration-300 ease-in-out',
         'md:bottom-0', // On desktop, it's just at the bottom
         'h-16 md:h-14', // Height: 64px on mobile, 56px on desktop
-        'pb-[env(safe-area-inset-bottom)] md:pb-0', // iOS notch padding on mobile
+        'pb-[env(safe-area-inset-bottom)] md:pb-0', // iOS notch padding for content within the bar
         isTimerActive ? 'translate-y-0' : 'translate-y-full'
       )}
     >
-      {/* Adjust padding for BottomNavigation on mobile screens */}
-      <div className="md:hidden h-16" />
+      {/* Removed spacer div: <div className="md:hidden h-16" /> */}
 
       <Link href="/timer" className="block h-full w-full cursor-pointer">
         <div className="container mx-auto px-3 sm:px-4 h-full flex items-center justify-between">
@@ -97,7 +95,7 @@ const GlobalTimerBar = () => {
                 <PlayIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               )}
             </Button>
-            {(timerState.isRunning || timerState.isPaused) && (
+            {(timerState.isRunning || timerState.isPaused) && !timerState.isComplete && (
                <Button
                 variant="ghost"
                 size="icon"
@@ -119,7 +117,7 @@ const GlobalTimerBar = () => {
         value={progressPercentage}
         className="absolute bottom-0 left-0 right-0 h-0.5 bg-transparent"
         indicatorClassName={cn(
-            'transition-all duration-1000 ease-linear',
+            'transition-all duration-1000 ease-linear', // Ensure smooth progress animation
             timerState.isComplete ? 'bg-green-500' : 
             timerState.isResting || timerState.isBetweenSectionsRest ? 'bg-accent' : 'bg-primary'
         )}
