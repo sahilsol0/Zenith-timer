@@ -1,8 +1,16 @@
+
 'use client';
 import Link from 'next/link';
 import { TimerIcon, CogIcon, PlusCircleIcon, LayoutGridIcon, MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger, 
+  SheetClose, 
+  SheetHeader, 
+  SheetTitle 
+} from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile'; // Assuming this hook exists
 import { useState } from 'react';
 
@@ -54,7 +62,10 @@ const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px] bg-card p-0">
-              <div className="flex flex-col space-y-1 pt-6">
+              <SheetHeader className="p-4 border-b border-border">
+                <SheetTitle className="text-lg font-semibold text-primary">Navigation Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-1 p-4">
                 {navItems}
               </div>
             </SheetContent>
