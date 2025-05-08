@@ -33,39 +33,39 @@ const TemplateCard = ({ template, onSelect, className }: TemplateCardProps) => {
       onClick={() => onSelect(template.id)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(template.id)}
     >
-      <CardHeader>
-        <CardTitle className="text-xl lg:text-2xl font-semibold text-primary">{template.name}</CardTitle>
-        <CardDescription className="text-sm lg:text-base text-card-foreground/80 h-20 overflow-hidden text-ellipsis">
+      <CardHeader className="p-3 xs:p-4 sm:p-6">
+        <CardTitle className="text-base xs:text-lg sm:text-xl lg:text-2xl font-semibold text-primary">{template.name}</CardTitle>
+        <CardDescription className="text-[0.7rem] xs:text-xs sm:text-sm lg:text-base text-card-foreground/80 h-16 xs:h-20 overflow-hidden text-ellipsis leading-snug xs:leading-normal">
           {template.description}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow">
-        <div className="space-y-2 text-sm text-card-foreground/90">
+      <CardContent className="flex-grow px-3 xs:p-4 sm:px-6 pt-0">
+        <div className="space-y-1.5 xs:space-y-2 text-[0.7rem] xs:text-xs sm:text-sm text-card-foreground/90">
           <div className="flex items-center">
-            <LayersIcon className="h-4 w-4 mr-2 text-accent" />
+            <LayersIcon className="h-3 w-3 xs:h-4 xs:w-4 mr-1.5 xs:mr-2 text-accent" />
             <span>{template.segments.length} segment{template.segments.length > 1 ? 's' : ''}</span>
           </div>
           <div className="flex items-center">
-            <ClockIcon className="h-4 w-4 mr-2 text-accent" />
+            <ClockIcon className="h-3 w-3 xs:h-4 xs:w-4 mr-1.5 xs:mr-2 text-accent" />
             <span>Approx. {formatDuration(totalDurationSeconds)}</span>
           </div>
           <div className="flex items-center">
-            <RepeatIcon className="h-4 w-4 mr-2 text-accent" />
+            <RepeatIcon className="h-3 w-3 xs:h-4 xs:w-4 mr-1.5 xs:mr-2 text-accent" />
             <span>{template.repeat ? "Repeats" : "Runs once"}</span>
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="p-3 xs:p-4 sm:p-6">
         <Button 
           variant="default" 
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm py-2 sm:py-2.5"
           onClick={(e) => {
-            e.stopPropagation(); // Prevent card click event
+            e.stopPropagation(); 
             onSelect(template.id);
           }}
           aria-label={`Select ${template.name} template`}
         >
-          <PlayCircleIcon className="mr-2 h-5 w-5" />
+          <PlayCircleIcon className="mr-1.5 xs:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
           Use Template
         </Button>
       </CardFooter>

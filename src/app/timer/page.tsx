@@ -78,13 +78,13 @@ function TimerPageContent() {
 
 
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-xl text-foreground/80">Loading timer configuration...</p></div>;
+    return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-lg sm:text-xl text-foreground/80">Loading timer configuration...</p></div>;
   }
 
   if (error) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center">
-        <p className="text-xl text-destructive mb-4">{error}</p>
+      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center px-4">
+        <p className="text-lg sm:text-xl text-destructive mb-4">{error}</p>
         <Link href="/templates">
           <Button variant="outline">
             <ChevronLeftIcon className="mr-2 h-4 w-4" /> Back to Templates
@@ -95,7 +95,7 @@ function TimerPageContent() {
   }
 
   if (!selectedConfig) {
-     return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-xl text-foreground/80">Configuration not loaded.</p></div>;
+     return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-lg sm:text-xl text-foreground/80">Configuration not loaded.</p></div>;
   }
   
   const currentSegmentDetails = selectedConfig.segments[timerState.currentSegmentIndex];
@@ -116,34 +116,34 @@ function TimerPageContent() {
 
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 space-y-8 min-h-[calc(100vh-var(--header-height,12rem)-env(safe-area-inset-bottom))]">
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 space-y-6 md:space-y-8 min-h-[calc(100vh-var(--header-height,10rem)-env(safe-area-inset-bottom))]">
       <div className="w-full max-w-3xl text-center">
-        <div className="flex justify-between items-center mb-2">
-            <Link href="/templates" className="text-sm text-accent hover:underline flex items-center">
-                <ChevronLeftIcon className="mr-1 h-4 w-4" /> Change Template
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 space-y-1 sm:space-y-0 px-2">
+            <Link href="/templates" className="text-xs sm:text-sm text-accent hover:underline flex items-center">
+                <ChevronLeftIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Change Template
             </Link>
             {selectedConfig.isCustom && (
-                 <Link href={`/create?editId=${selectedConfig.id}`} className="text-sm text-accent hover:underline flex items-center">
-                    <SettingsIcon className="mr-1 h-4 w-4" /> Edit This Timer
+                 <Link href={`/create?editId=${selectedConfig.id}`} className="text-xs sm:text-sm text-accent hover:underline flex items-center">
+                    <SettingsIcon className="mr-1 h-3 w-3 sm:h-4 sm:w-4" /> Edit This Timer
                 </Link>
             )}
         </div>
-        <h2 className="text-3xl font-semibold text-primary mb-1">{selectedConfig.name}</h2>
-        <p className="text-lg text-foreground/70 mb-1">
+        <h2 className="text-2xl sm:text-3xl font-semibold text-primary mb-1">{selectedConfig.name}</h2>
+        <p className="text-base sm:text-lg text-foreground/70 mb-1">
           Segment: <span className="font-medium text-foreground/90">{timerState.currentSegmentName}</span>
           {!timerState.isResting && !timerState.isBetweenSectionsRest && timerState.totalWorkItemsInSegment > 1 && (
-            <span className="text-sm"> ({timerState.currentWorkItemIndex + 1}/{timerState.totalWorkItemsInSegment})</span>
+            <span className="text-xs sm:text-sm"> ({timerState.currentWorkItemIndex + 1}/{timerState.totalWorkItemsInSegment})</span>
           )}
         </p>
       </div>
 
       <TimerDisplay seconds={timerState.timeLeft} className={timerState.isComplete ? 'text-green-400' : timerState.isResting || timerState.isBetweenSectionsRest ? 'text-accent' : 'text-foreground'} />
       
-      <div className="w-full max-w-xl">
-         <Progress value={progressPercentage} className="h-3 bg-card/50" indicatorClassName={timerState.isComplete ? 'bg-green-500' : timerState.isResting || timerState.isBetweenSectionsRest ? 'bg-accent' : 'bg-primary'} />
+      <div className="w-full max-w-md sm:max-w-xl px-2 sm:px-0">
+         <Progress value={progressPercentage} className="h-2 sm:h-3 bg-card/50" indicatorClassName={timerState.isComplete ? 'bg-green-500' : timerState.isResting || timerState.isBetweenSectionsRest ? 'bg-accent' : 'bg-primary'} />
       </div>
 
-      <DescriptionArea text={timerState.description} className="w-full max-w-xl" />
+      <DescriptionArea text={timerState.description} className="w-full max-w-md sm:max-w-xl" />
 
       <TimerControls
         isRunning={timerState.isRunning}
@@ -156,40 +156,53 @@ function TimerPageContent() {
         onSkip={skipToNext}
       />
       
-      {selectedConfig.segments.length > 1 && (
-        <div className="w-full max-w-xl mt-4 p-4 bg-card/70 backdrop-blur-sm rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-foreground mb-2 flex items-center"><ListChecksIcon className="mr-2 h-5 w-5 text-primary"/>Up Next:</h3>
-            <ul className="space-y-1 text-sm text-foreground/80 max-h-32 overflow-y-auto">
+      {selectedConfig.segments.length > 1 && !timerState.isComplete && (
+        <div className="w-full max-w-md sm:max-w-xl mt-2 sm:mt-4 p-3 sm:p-4 bg-card/70 backdrop-blur-sm rounded-lg shadow">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 flex items-center"><ListChecksIcon className="mr-2 h-4 w-4 sm:h-5 sm:w-5 text-primary"/>Up Next:</h3>
+            <ul className="space-y-1 text-xs sm:text-sm text-foreground/80 max-h-24 sm:max-h-32 overflow-y-auto">
                 {selectedConfig.segments.map((segment, index) => {
                     if (index > timerState.currentSegmentIndex) {
                         return (
                             <li key={`${segment.name}-${index}`} className="opacity-70">
                                 {segment.name}
+                                {segment.work.length > 0 && `: ${segment.work[0]}`}
                             </li>
                         );
                     }
                     if (index === timerState.currentSegmentIndex) {
                         const nextWorkItem = segment.work[timerState.currentWorkItemIndex + 1];
-                        if (!timerState.isResting && nextWorkItem) {
+                        if (!timerState.isResting && !timerState.isBetweenSectionsRest && nextWorkItem) {
                              return <li key={`next-work-${index}`} className="font-medium">{nextWorkItem}</li>;
                         }
-                        if (segment.rest > 0 && !timerState.isResting) { // Current segment has rest and we are not in it yet
-                            return <li key={`next-rest-${index}`} className="font-medium">{segment.restString}</li>;
+                        if (segment.rest > 0 && !timerState.isResting && !timerState.isBetweenSectionsRest) { 
+                            return <li key={`next-rest-${index}`} className="font-medium">{segment.restString || "Rest"}</li>;
                         }
-                        // If currently resting, or no more work items/rest in current segment, check next segment
                         const nextSegment = selectedConfig.segments[index + 1];
                         if (nextSegment) {
                             return <li key={`next-segment-${index+1}`} className="font-medium">{nextSegment.name}: {nextSegment.work[0]}</li>;
                         }
                         if (selectedConfig.repeat) {
                             const firstSegment = selectedConfig.segments[0];
-                            return <li key={`next-repeat-${index}`} className="font-medium">{selectedConfig.restBetweenSections > 0 ? "Section Break, then: " : ""}{firstSegment.name}: {firstSegment.work[0]}</li>;
+                            return <li key={`next-repeat-${index}`} className="font-medium">{(selectedConfig.restBetweenSections > 0 && !timerState.isBetweenSectionsRest) ? "Section Break, then: " : ""}{firstSegment.name}: {firstSegment.work[0]}</li>;
                         }
                     }
                     return null;
-                }).filter(Boolean).slice(0,3) /* Show next 3 items */
+                }).filter(Boolean).slice(0,3)
                 }
                 {timerState.isComplete && <li>Timer finished!</li>}
+                 {(timerState.isComplete || 
+                    selectedConfig.segments.map((segment, index) => {
+                         if (index > timerState.currentSegmentIndex) return true;
+                         if (index === timerState.currentSegmentIndex) {
+                            const nextWorkItem = segment.work[timerState.currentWorkItemIndex + 1];
+                             if (!timerState.isResting && !timerState.isBetweenSectionsRest && nextWorkItem) return true;
+                             if (segment.rest > 0 && !timerState.isResting && !timerState.isBetweenSectionsRest) return true;
+                             if (selectedConfig.segments[index + 1]) return true;
+                             if (selectedConfig.repeat) return true;
+                         }
+                         return false;
+                    }).filter(Boolean).length === 0) && !timerState.isComplete && <li>End of sequence.</li>
+                 }
             </ul>
         </div>
       )}

@@ -18,7 +18,7 @@ const TimerDisplay = ({ seconds, className }: TimerDisplayProps) => {
 
   return (
     <div className={cn(
-      "text-8xl sm:text-9xl md:text-[10rem] lg:text-[12rem] font-bold text-foreground tabular-nums tracking-tighter",
+      "text-7xl xs:text-8xl sm:text-9xl md:text-[10rem] lg:text-[12rem] font-bold text-foreground tabular-nums tracking-tighter", // Responsive font sizes
       "flex justify-center items-center transition-colors duration-500",
       className
     )}>

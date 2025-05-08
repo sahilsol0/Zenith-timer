@@ -62,10 +62,10 @@ export default function TemplatesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-primary">Choose a Timer Template</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
+        <h1 className="text-3xl sm:text-4xl font-bold text-primary">Choose a Timer Template</h1>
         <Link href="/create">
-          <Button variant="default" className="bg-primary hover:bg-primary/90">
+          <Button variant="default" className="bg-primary hover:bg-primary/90 w-full md:w-auto">
             <PlusCircleIcon className="mr-2 h-5 w-5" />
             Create New Timer
           </Button>
@@ -74,7 +74,7 @@ export default function TemplatesPage() {
 
       {TIMER_TEMPLATES.length > 0 && (
         <>
-          <h2 className="text-2xl font-semibold text-foreground/90 mb-4">Pre-configured Timers</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground/90 mb-4">Pre-configured Timers</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {TIMER_TEMPLATES.map((template) => (
               <TemplateCard key={template.id} template={template} onSelect={handleSelectTemplate} />
@@ -85,7 +85,7 @@ export default function TemplatesPage() {
 
       {customTimers.length > 0 && (
         <>
-          <h2 className="text-2xl font-semibold text-foreground/90 mb-4">Your Custom Timers</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground/90 mb-4">Your Custom Timers</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {customTimers.map((template) => (
               <div key={template.id} className="relative group">
@@ -95,7 +95,7 @@ export default function TemplatesPage() {
                      <Button
                         variant="destructive"
                         size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 p-2 h-8 w-8" // Smaller button
                         onClick={(e) => {
                            e.stopPropagation();
                            setShowDeleteConfirm(template.id);
@@ -126,7 +126,7 @@ export default function TemplatesPage() {
       
       {allTimers.length === 0 && (
          <div className="text-center py-10 bg-card/70 backdrop-blur-sm rounded-lg">
-          <p className="text-xl text-foreground/70 mb-4">No timers found. Ready to create your first one?</p>
+          <p className="text-lg sm:text-xl text-foreground/70 mb-4">No timers found. Ready to create your first one?</p>
           <Link href="/create">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <PlusCircleIcon className="mr-2 h-5 w-5" />

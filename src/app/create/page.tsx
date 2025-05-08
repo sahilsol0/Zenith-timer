@@ -33,15 +33,11 @@ function CreateTimerPageContent() {
         }
       }
       
-      // Also check predefined templates if needed, though usually editing is for custom ones.
-      // For this app, let's assume editId refers to custom timers only.
-      // If it could be a predefined one you want to "clone and edit", logic would differ.
-
       if (foundConfig) {
         setEditingConfig(foundConfig);
       } else {
         toast({ title: "Not Found", description: "Timer to edit was not found.", variant: "destructive" });
-        router.replace('/create'); // Go back to create new if ID is invalid
+        router.replace('/create'); 
       }
     }
     setIsLoading(false);
@@ -56,19 +52,18 @@ function CreateTimerPageContent() {
         customTimers = JSON.parse(customTimersRaw);
       } catch (error) {
         console.error("Failed to parse custom timers, starting fresh list:", error);
-        customTimers = []; // Start with empty if parsing fails
+        customTimers = []; 
       }
     }
 
-    if (editId) { // Editing existing
+    if (editId) { 
       const index = customTimers.findIndex(t => t.id === editId);
       if (index > -1) {
         customTimers[index] = newConfig;
-      } else { // Should not happen if editId is valid, but as a fallback
+      } else { 
         customTimers.push(newConfig);
       }
-    } else { // Creating new
-      // Ensure unique ID, though TimerForm should handle initial generation
+    } else { 
       if (customTimers.some(t => t.id === newConfig.id) || TIMER_TEMPLATES.some(t => t.id === newConfig.id)) {
          newConfig.id = `custom-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
       }
@@ -84,15 +79,15 @@ function CreateTimerPageContent() {
   };
   
   if (editId && isLoading) {
-      return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-xl">Loading timer for editing...</p></div>;
+      return <div className="flex justify-center items-center min-h-[calc(100vh-200px)]"><p className="text-lg sm:text-xl">Loading timer for editing...</p></div>;
   }
 
   return (
     <div className="container mx-auto px-2 py-8">
         <div className="mb-6">
             <Link href="/templates">
-                <Button variant="outline">
-                    <ChevronLeftIcon className="mr-2 h-4 w-4" /> Back to Templates
+                <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                    <ChevronLeftIcon className="mr-1.5 h-3.5 w-3.5 sm:mr-2 sm:h-4 sm:w-4" /> Back to Templates
                 </Button>
             </Link>
         </div>
@@ -104,7 +99,7 @@ function CreateTimerPageContent() {
 
 export default function CreateTimerPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><p className="text-xl">Loading...</p></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><p className="text-lg sm:text-xl">Loading...</p></div>}>
       <CreateTimerPageContent />
     </Suspense>
   );

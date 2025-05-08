@@ -108,16 +108,16 @@ const TimerForm = ({ initialConfiguration, onSave }: TimerFormProps) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto bg-card/80 backdrop-blur-sm">
-      <CardHeader>
-        <CardTitle className="text-3xl text-primary">{initialConfiguration ? 'Edit Timer' : 'Create New Timer'}</CardTitle>
-        <CardDescription>
+      <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+        <CardTitle className="text-2xl sm:text-3xl text-primary">{initialConfiguration ? 'Edit Timer' : 'Create New Timer'}</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
           {initialConfiguration ? 'Modify the details of your custom timer.' : 'Design your own timer sequence for any activity.'}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-4 sm:px-6">
           <div>
-            <Label htmlFor="timer-name" className="text-lg">Timer Name</Label>
+            <Label htmlFor="timer-name" className="text-base sm:text-lg">Timer Name</Label>
             <Input
               id="timer-name"
               value={config.name}
@@ -129,7 +129,7 @@ const TimerForm = ({ initialConfiguration, onSave }: TimerFormProps) => {
           </div>
 
           <div>
-            <Label htmlFor="timer-description" className="text-lg">Description</Label>
+            <Label htmlFor="timer-description" className="text-base sm:text-lg">Description</Label>
             <Textarea
               id="timer-description"
               value={config.description}
@@ -141,7 +141,7 @@ const TimerForm = ({ initialConfiguration, onSave }: TimerFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold text-foreground/90">Segments</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground/90">Segments</h3>
             {config.segments.map((segment, index) => (
               <SegmentEditor
                 key={index} // Consider more stable keys if segments can be reordered
@@ -156,9 +156,9 @@ const TimerForm = ({ initialConfiguration, onSave }: TimerFormProps) => {
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             <div>
-              <Label htmlFor="rest-between-sections" className="text-lg">Rest Between Repeats (seconds)</Label>
+              <Label htmlFor="rest-between-sections" className="text-base sm:text-lg">Rest Between Repeats (seconds)</Label>
               <Input
                 id="rest-between-sections"
                 type="number"
@@ -169,18 +169,18 @@ const TimerForm = ({ initialConfiguration, onSave }: TimerFormProps) => {
                 className="mt-1"
               />
             </div>
-            <div className="flex items-center space-x-2 pt-6">
+            <div className="flex items-center space-x-2 pt-4 sm:pt-6">
               <Checkbox
                 id="repeat-timer"
                 checked={config.repeat}
                 onCheckedChange={(checked) => handleInputChange('repeat', Boolean(checked))}
               />
-              <Label htmlFor="repeat-timer" className="text-lg">Repeat Sequence</Label>
+              <Label htmlFor="repeat-timer" className="text-base sm:text-lg">Repeat Sequence</Label>
             </div>
           </div>
 
         </CardContent>
-        <CardFooter>
+        <CardFooter className="px-4 sm:px-6 pb-4 sm:pb-6">
           <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
             <SaveIcon className="h-5 w-5 mr-2" /> Save Timer Configuration
           </Button>

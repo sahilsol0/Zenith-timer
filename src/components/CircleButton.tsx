@@ -20,16 +20,16 @@ const CircleButton = ({
 }: CircleButtonProps) => {
   
   const sizeClasses = {
-    sm: 'h-24 w-24 text-sm',
-    md: 'h-36 w-36 text-lg',
-    lg: 'h-48 w-48 text-xl',
+    sm: 'h-20 w-20 sm:h-24 sm:w-24 text-xs sm:text-sm',
+    md: 'h-28 w-28 sm:h-36 sm:w-36 text-sm sm:text-lg',
+    lg: 'h-36 w-36 sm:h-48 sm:w-48 text-base sm:text-xl',
   };
 
-  const variantClasses = {
-    primary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-    secondary: 'bg-secondary hover:bg-secondary/90 text-secondary-foreground',
-    destructive: 'bg-destructive hover:bg-destructive/90 text-destructive-foreground',
-  };
+  const iconSizeClasses = {
+    sm: 'h-5 w-5 sm:h-6 sm:w-6',
+    md: 'h-6 w-6 sm:h-8 sm:w-8',
+    lg: 'h-8 w-8 sm:h-10 sm:w-10',
+  }
 
   return (
     <button
@@ -37,17 +37,13 @@ const CircleButton = ({
       disabled={disabled}
       className={cn(
         "rounded-full flex flex-col justify-center items-center font-semibold shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md",
-        // Subtle radial gradient effect using pseudo-elements might be overly complex for Tailwind.
-        // Instead, using a simple background with hover states.
-        // For an actual radial gradient on the button itself that changes on hover, custom CSS or more complex Tailwind is needed.
-        // This approach uses solid colors from the theme.
         variantClasses[variant],
         sizeClasses[size],
         className
       )}
       {...props}
     >
-      {Icon && <Icon className={cn("mb-1", size === 'sm' ? 'h-6 w-6' : size === 'md' ? 'h-8 w-8' : 'h-10 w-10')} />}
+      {Icon && <Icon className={cn("mb-1", iconSizeClasses[size])} />}
       {text && <span>{text}</span>}
     </button>
   );
