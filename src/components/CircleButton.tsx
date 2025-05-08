@@ -31,6 +31,12 @@ const CircleButton = ({
     lg: 'h-8 w-8 sm:h-10 sm:w-10',
   }
 
+  const variantClasses = {
+    primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+  };
+
   return (
     <button
       onClick={onClick}
