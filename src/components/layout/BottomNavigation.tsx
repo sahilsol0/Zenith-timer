@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -5,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutGridIcon, PlusCircleIcon, CogIcon, HomeIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useGlobalTimer } from '@/contexts/TimerContext';
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
@@ -16,35 +18,31 @@ const navItems = [
 const BottomNavigation = () => {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { isTimerActive } = useGlobalTimer();
 
-  if (typeof isMobile === 'undefined' || !isMobile) { // Also check for undefined to prevent flash on initial load
+  if (typeof isMobile === 'undefined' || !isMobile) {
     return null;
   }
 
   return (
     <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border shadow-md",
-      "md:hidden", // Ensure it's hidden on medium screens and up by Tailwind
-      "h-16" // Height of the navigation bar
+      "fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-md", // z-30 to be below GlobalTimerBar (z-40)
+      "md:hidden",
+      "h-16", // Height of the navigation bar
+      isTimerActive ? "bottom-16 md:bottom-0" : "bottom-0" // If timer bar is active (h-16), push this up
     )}>
       <div className={cn(
-        "flex justify-around items-stretch h-full max-w-md mx-auto", // items-stretch for full height touch targets
-        "pb-[env(safe-area-inset-bottom)]" // Add padding for notch on iOS devices
+        "flex justify-around items-stretch h-full max-w-md mx-auto",
+        "pb-[env(safe-area-inset-bottom)]"
       )}>
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href === '/templates' && pathname.startsWith('/timer')) || (item.href !== '/' && pathname.startsWith(item.href) && item.href !== '/templates');
-          // Special handling for /templates to be active also on /timer page
-          // General rule: exact match or startsWith for non-root paths.
-          // Refined active logic:
-          // - Exact match for '/'
-          // - For /templates, active if pathname is /templates OR /timer
-          // - For other paths, startsWith
           let effectiveIsActive = pathname === item.href;
           if (item.href === '/templates' && (pathname === '/templates' || pathname.startsWith('/timer') || pathname.startsWith('/create'))) {
              effectiveIsActive = true;
-          } else if (item.href !== '/' && pathname.startsWith(item.href)) {
+          } else if (item.href !== '/' && pathname.startsWith(item.href) && item.href !== '/templates') { // Ensure /templates doesn't make /create active
              effectiveIsActive = true;
           }
+          if (item.href === '/create' && pathname.startsWith('/templates')) effectiveIsActive = false; // Fix for /create being active on /templates
 
 
           return (
