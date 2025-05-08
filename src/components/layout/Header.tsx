@@ -1,21 +1,12 @@
 
 'use client';
 import Link from 'next/link';
-import { TimerIcon, CogIcon, PlusCircleIcon, LayoutGridIcon, MenuIcon } from 'lucide-react';
+import { TimerIcon, CogIcon, PlusCircleIcon, LayoutGridIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger, 
-  SheetClose, 
-  SheetHeader, 
-  SheetTitle 
-} from '@/components/ui/sheet';
-import { useIsMobile } from '@/hooks/use-mobile'; // Assuming this hook exists
-import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const NavLink = ({ href, children, onClick }: { href: string; children: React.ReactNode; onClick?: () => void }) => (
-  <Button variant="ghost" asChild onClick={onClick}>
+const NavLink = ({ href, children }: { href: string; children: React.ReactNode; }) => (
+  <Button variant="ghost" asChild>
     <Link href={href} className="flex items-center w-full justify-start px-4 py-3 text-base sm:text-sm sm:px-2 sm:py-2">
       {children}
     </Link>
@@ -24,21 +15,22 @@ const NavLink = ({ href, children, onClick }: { href: string; children: React.Re
 
 const Header = () => {
   const isMobile = useIsMobile();
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const closeSheet = () => setIsSheetOpen(false);
+  if (isMobile) {
+    return null; // Don't render header on mobile, BottomNavigation will be used
+  }
 
   const navItems = (
     <>
-      <NavLink href="/templates" onClick={closeSheet}>
+      <NavLink href="/templates">
         <LayoutGridIcon className="mr-2 h-5 w-5 sm:mr-1 sm:h-4 sm:w-4" />
         Templates
       </NavLink>
-      <NavLink href="/create" onClick={closeSheet}>
+      <NavLink href="/create">
         <PlusCircleIcon className="mr-2 h-5 w-5 sm:mr-1 sm:h-4 sm:w-4" />
         Create New
       </NavLink>
-      <NavLink href="/settings" onClick={closeSheet}>
+      <NavLink href="/settings">
         <CogIcon className="mr-2 h-5 w-5 sm:mr-1 sm:h-4 sm:w-4" />
         Settings
       </NavLink>
@@ -53,28 +45,9 @@ const Header = () => {
           Zenith Timer
         </Link>
 
-        {isMobile ? (
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MenuIcon className="h-6 w-6" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] sm:w-[300px] bg-card p-0">
-              <SheetHeader className="p-4 border-b border-border">
-                <SheetTitle className="text-lg font-semibold text-primary">Navigation Menu</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col space-y-1 p-4">
-                {navItems}
-              </div>
-            </SheetContent>
-          </Sheet>
-        ) : (
-          <div className="space-x-1 md:space-x-2">
-            {navItems}
-          </div>
-        )}
+        <div className="space-x-1 md:space-x-2">
+          {navItems}
+        </div>
       </nav>
     </header>
   );

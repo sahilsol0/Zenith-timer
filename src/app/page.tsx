@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-var(--header-height,10rem))] text-center animate-fadeIn px-2 sm:px-0">
+    <div className="flex flex-col items-center justify-center min-h-full text-center animate-fadeIn px-2 sm:px-0">
       <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-secondary">
         Welcome to Zenith Timer
       </h1>

@@ -116,7 +116,7 @@ function TimerPageContent() {
 
 
   return (
-    <div className="flex flex-col items-center justify-center p-2 sm:p-4 space-y-6 md:space-y-8 min-h-[calc(100vh-var(--header-height,10rem)-env(safe-area-inset-bottom))]">
+    <div className="flex flex-col items-center justify-center p-2 sm:p-4 space-y-6 md:space-y-8 min-h-full">
       <div className="w-full max-w-3xl text-center">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 space-y-1 sm:space-y-0 px-2">
             <Link href="/templates" className="text-xs sm:text-sm text-accent hover:underline flex items-center">
