@@ -103,7 +103,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       isResting = false;
       // currentWorkItemIndex was already advanced before rest, or segment finished.
       // Let's check if we need to move to next segment after this rest.
-      if (currentWorkItemIndex >= currentSegment.work.length) {
+      if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
          currentWorkItemIndex = 0; // Reset for new segment
          currentSegmentIndex++;
       }
@@ -208,12 +208,30 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         setTimerState(prev => ({...prev, description: "Cannot start: No configuration or segments."}));
         return;
     }
-    if (timerState.isComplete) { // If timer was complete, reset before starting
-        // Resetting will re-initialize based on current `configuration` due to useEffect [configuration]
-        // We need to ensure the configuration itself is valid and then trigger the start
-        // The resetTimer function below ensures the state is set correctly for a fresh start
-        resetTimer(true); // Pass true to indicate it should start immediately after reset
+    if (timerState.isComplete) { // If timer was complete, "Restart" it
+        const initialSegment = configuration.segments[0];
+        if (initialSegment) { // Should always exist if config is valid
+            setTimerState({
+                timeLeft: initialSegment.time,
+                description: initialSegment.work[0],
+                currentSegmentName: initialSegment.name,
+                currentWorkItemIndex: 0,
+                currentSegmentIndex: 0,
+                isResting: false,
+                isBetweenSectionsRest: false,
+                isRunning: true, // Start immediately
+                isPaused: false,
+                isComplete: false,
+                totalSegments: configuration.segments.length,
+                totalWorkItemsInSegment: initialSegment.work.length,
+            });
+        } else {
+            // Fallback, though should not happen with valid config
+             setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
+        }
     } else {
+        // Standard start for a new or paused timer (though resume is separate)
+        // This handles starting a timer that was just reset, or a brand new one.
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
     }
   };
@@ -227,7 +245,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false }));
   };
   
-  const resetTimer = (startAfterReset = false) => {
+  const resetTimer = () => { // Removed startAfterReset parameter
     if (timerRef.current) clearTimeout(timerRef.current);
     if (configuration && configuration.segments.length > 0) {
       const initialSegment = configuration.segments[0];
@@ -239,14 +257,14 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         currentSegmentIndex: 0,
         isResting: false,
         isBetweenSectionsRest: false,
-        isRunning: startAfterReset, // Set isRunning based on parameter
+        isRunning: false, // Always set isRunning to false on reset
         isPaused: false,
         isComplete: false,
         totalSegments: configuration.segments.length,
         totalWorkItemsInSegment: initialSegment.work.length,
       });
     } else {
-      setTimerState(initialTimerState);
+      setTimerState(initialTimerState); // initialTimerState also has isRunning: false
     }
   };
   
