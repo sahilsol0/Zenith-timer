@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { LOCAL_STORAGE_CUSTOM_TIMERS_KEY } from '@/lib/constants';
 import type { TimerConfiguration } from '@/lib/types';
-import { DownloadIcon, UploadIcon, Trash2Icon, PaletteIcon } from 'lucide-react';
+import { DownloadIcon, UploadIcon, Trash2Icon, PaletteIcon, SunIcon, MoonIcon, MonitorIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,19 +21,30 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { useTheme } from '@/contexts/ThemeContext';
+import { AVAILABLE_PALETTES } from '@/lib/themes';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const [soundEnabled, setSoundEnabled] = useState(true); 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false); 
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-
+  const { themeMode, setThemeMode, currentPaletteId, setCurrentPaletteId } = useTheme();
 
   useEffect(() => {
     const storedSound = localStorage.getItem('zenithTimerSoundEnabled');
     if (storedSound) setSoundEnabled(JSON.parse(storedSound));
-    
+
     const storedNotifs = localStorage.getItem('zenithTimerNotificationsEnabled');
     if (storedNotifs) setNotificationsEnabled(JSON.parse(storedNotifs));
   }, []);
@@ -49,7 +60,7 @@ export default function SettingsPage() {
     localStorage.setItem('zenithTimerNotificationsEnabled', JSON.stringify(checked));
     toast({ title: 'Notification Settings Updated', description: `Browser notifications are now ${checked ? 'enabled (permission pending)' : 'disabled'}.` });
   };
-  
+
   const handleExportTimers = () => {
     const customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
     if (!customTimersRaw || customTimersRaw === "[]") {
@@ -82,9 +93,9 @@ export default function SettingsPage() {
       try {
         const importedJson = e.target?.result as string;
         const importedTimers: TimerConfiguration[] = JSON.parse(importedJson);
-        
+
         if (!Array.isArray(importedTimers) || !importedTimers.every(t => t.id && t.name && Array.isArray(t.segments))) {
-            throw new Error("Invalid file format.");
+          throw new Error("Invalid file format.");
         }
 
         localStorage.setItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY, JSON.stringify(importedTimers));
@@ -95,7 +106,7 @@ export default function SettingsPage() {
       }
     };
     reader.readAsText(file);
-    event.target.value = ''; 
+    event.target.value = '';
   };
 
   const handleClearAllCustomTimers = () => {
@@ -108,8 +119,69 @@ export default function SettingsPage() {
   return (
     <div className="container mx-auto px-2 sm:px-4 py-8">
       <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-8">Settings</h1>
-      
+
       <div className="space-y-8 max-w-2xl">
+        <Card className="bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl sm:text-2xl">
+              <PaletteIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              Theme Customization
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base">
+              Personalize the look and feel of Zenith Timer.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <Label className="text-base sm:text-lg mb-2 block">Color Palette</Label>
+              <Select value={currentPaletteId} onValueChange={setCurrentPaletteId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a palette" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AVAILABLE_PALETTES.map((palette) => (
+                    <SelectItem key={palette.id} value={palette.id}>
+                      {palette.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-base sm:text-lg mb-2 block">Appearance</Label>
+              <RadioGroup
+                value={themeMode}
+                onValueChange={(value) => setThemeMode(value as 'light' | 'dark' | 'system')}
+                className="flex flex-col sm:flex-row gap-2 sm:gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="light" id="light-mode" />
+                  <Label htmlFor="light-mode" className="flex items-center cursor-pointer">
+                    <SunIcon className="mr-2 h-4 w-4" /> Light
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="dark" id="dark-mode" />
+                  <Label htmlFor="dark-mode" className="flex items-center cursor-pointer">
+                    <MoonIcon className="mr-2 h-4 w-4" /> Dark
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="system" id="system-mode" />
+                  <Label htmlFor="system-mode" className="flex items-center cursor-pointer">
+                    <MonitorIcon className="mr-2 h-4 w-4" /> System
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground pt-1">
+              Theme changes are applied instantly. Your preferences are saved locally in your browser.
+              The theme system uses CSS HSL variables defined in <code>src/app/globals.css</code> and controlled via <code>src/contexts/ThemeContext.tsx</code>.
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="bg-card/80 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-xl sm:text-2xl">General Settings</CardTitle>
@@ -138,78 +210,36 @@ export default function SettingsPage() {
             </Button>
             <div>
               <Label htmlFor="import-file" className="block mb-2 text-xs sm:text-sm font-medium text-foreground">Import Custom Timers (JSON)</Label>
-              <Input 
-                id="import-file" 
-                type="file" 
-                accept=".json" 
-                onChange={handleImportTimers} 
-                className="w-full file:mr-2 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90" 
+              <Input
+                id="import-file"
+                type="file"
+                accept=".json"
+                onChange={handleImportTimers}
+                className="w-full file:mr-2 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
               />
             </div>
-             <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="w-full justify-start text-sm sm:text-base">
-                        <Trash2Icon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Clear All Custom Timers
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all your custom timer configurations from this browser.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel onClick={() => setShowClearConfirm(false)}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleClearAllCustomTimers}>Yes, delete all</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
+            <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full justify-start text-sm sm:text-base">
+                  <Trash2Icon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Clear All Custom Timers
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete all your custom timer configurations from this browser.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setShowClearConfirm(false)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearAllCustomTimers}>Yes, delete all</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
             </AlertDialog>
           </CardContent>
         </Card>
-
-        <Card className="bg-card/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center text-xl sm:text-2xl">
-                <PaletteIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                Theme Customization
-            </CardTitle>
-            <CardDescription className="text-sm sm:text-base">
-              Learn how to customize the visual theme of Zenith Timer.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 sm:space-y-4">
-            <p className="text-sm sm:text-base text-foreground/90">
-              The visual theme of Zenith Timer is defined using CSS HSL (Hue, Saturation, Lightness) 
-              variables directly in the <code>src/app/globals.css</code> file.
-            </p>
-            <p className="text-sm sm:text-base text-foreground/90">
-              To customize the theme, developers can edit these variables. Changes are typically
-              reflected immediately by the development server (Hot Module Replacement) or after a page refresh.
-            </p>
-            <div>
-              <h4 className="text-base sm:text-lg font-semibold mb-2 text-foreground">Key Theme Variables:</h4>
-              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-foreground/80 bg-muted/30 p-3 sm:p-4 rounded-md">
-                <li><code>--primary: 124 28% 53%</code> (Muted Green - Primary interactive elements)</li>
-                <li><code>--secondary: 180 22% 67%</code> (Soft Cyan - Secondary elements)</li>
-                <li><code>--accent: 180 30% 75%</code> (Brighter Soft Cyan - Accents, highlights)</li>
-                <li><code>--background: 195 28% 13%</code> (Dark Teal - Main background for components)</li>
-                <li><code>--foreground: 180 20% 90%</code> (Light Cyan/Off-white - Main text color)</li>
-                <li><code>--card: 195 28% 16%</code> (Slightly lighter Dark Teal - Card backgrounds)</li>
-                <li><code>--border: 195 28% 22%</code> (Borders for components)</li>
-                <li><code>--destructive: 0 63% 31%</code> (Destructive actions)</li>
-                <li><code>--ring: 124 28% 53%</code> (Focus rings, often matches primary)</li>
-              </ul>
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground pt-1">
-              Refer to <code>src/app/globals.css</code> for the complete list of theme variables and their current values.
-              Modifying these variables allows for deep customization of the app's look and feel.
-            </p>
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );
 }
-

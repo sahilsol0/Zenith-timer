@@ -3,41 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  /* Base :root variables will act as fallback or initial load state */
   :root {
-    --gradient-start-color: 40 100% 96%; /* Fallback if body bg-image is used, matches new background */
-    --gradient-end-color: 40 100% 96%; /* Fallback, matches new background */
-
-    --background: 40 100% 96%; /* Light Cream/Beige */
-    --foreground: 30 15% 20%; /* Dark Brown */
-
-    --card: 40 100% 95%; /* Slightly off-white from background */
-    --card-foreground: 30 15% 20%; /* Dark Brown */
-
-    --popover: 40 100% 93%; /* Slightly darker for popovers */
-    --popover-foreground: 30 15% 20%; /* Dark Brown */
-
-    --primary: 15 70% 55%; /* Terracotta/Burnt Orange - for active states, highlights */
-    --primary-foreground: 40 100% 97%; /* Very Light Cream - for text on primary */
-
-    --secondary: 30 15% 20%; /* Dark Brown - for main call-to-action buttons */
-    --secondary-foreground: 40 100% 96%; /* Light Cream - for text on dark buttons */
-
-    --muted: 35 60% 90%; /* Light Peach/Beige - for unselected chip backgrounds */
-    --muted-foreground: 30 10% 45%; /* Medium-Dark Brown - for secondary text */
-
-    --accent: 15 75% 60%; /* Slightly Brighter Terracotta - for accents */
-    --accent-foreground: 40 100% 97%; /* Very Light Cream - for text on accent */
-    
-    --destructive: 0 60% 50%; /* Standard Red */
-    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
-
-    --border: 35 25% 85%; /* Light, Warm Gray */
-    --input: 40 100% 95%; /* Same as card background */
-    --ring: 15 70% 60%; /* Terracotta for focus rings */
-
-    --radius: 0.5rem; /* Default radius, components might override */
-
-    /* Chart colors (can be adjusted if charts are used) */
+    --background: 40 100% 96%; /* Zenith Default Light */
+    --foreground: 30 15% 20%;
+    --card: 40 100% 95%;
+    --card-foreground: 30 15% 20%;
+    --popover: 40 100% 93%;
+    --popover-foreground: 30 15% 20%;
+    --primary: 15 70% 55%;
+    --primary-foreground: 40 100% 97%;
+    --secondary: 30 15% 20%;
+    --secondary-foreground: 40 100% 96%;
+    --muted: 35 60% 90%;
+    --muted-foreground: 30 10% 45%;
+    --accent: 15 75% 60%;
+    --accent-foreground: 40 100% 97%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 35 25% 85%;
+    --input: 40 100% 95%;
+    --ring: 15 70% 60%;
+    --radius: 0.5rem;
     --chart-1: 15 70% 55%;
     --chart-2: 30 50% 70%;
     --chart-3: 45 60% 60%;
@@ -45,14 +32,153 @@
     --chart-5: 30 15% 40%;
   }
 
-  /* 
-    The .dark class can be used if a dark mode toggle is implemented.
-    For now, it will inherit from :root.
-  */
-  .dark {
-    /* Example: if you wanted a dark mode toggle with different values */
-    /* --background: 30 15% 10%; */
-    /* --foreground: 40 100% 90%; */
+  /* Zenith Default Theme */
+  [data-theme="zenith-default"] {
+    --background: 40 100% 96%;
+    --foreground: 30 15% 20%;
+    --card: 40 100% 95%;
+    --card-foreground: 30 15% 20%;
+    --popover: 40 100% 93%;
+    --popover-foreground: 30 15% 20%;
+    --primary: 15 70% 55%;
+    --primary-foreground: 40 100% 97%;
+    --secondary: 30 15% 20%;
+    --secondary-foreground: 40 100% 96%;
+    --muted: 35 60% 90%;
+    --muted-foreground: 30 10% 45%;
+    --accent: 15 75% 60%;
+    --accent-foreground: 40 100% 97%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 35 25% 85%;
+    --input: 40 100% 95%;
+    --ring: 15 70% 60%;
+  }
+
+  .dark[data-theme="zenith-default"] {
+    --background: 30 15% 10%;
+    --foreground: 40 100% 90%;
+    --card: 30 15% 12%;
+    --card-foreground: 40 100% 90%;
+    --popover: 30 15% 15%;
+    --popover-foreground: 40 100% 90%;
+    --primary: 15 70% 65%;
+    --primary-foreground: 30 15% 10%;
+    --secondary: 40 100% 90%;
+    --secondary-foreground: 30 15% 10%;
+    --muted: 30 15% 20%;
+    --muted-foreground: 40 100% 70%;
+    --accent: 15 75% 70%;
+    --accent-foreground: 30 15% 10%;
+    --destructive: 0 60% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 15% 25%;
+    --input: 30 15% 12%;
+    --ring: 15 70% 65%;
+  }
+
+  /* Deep Sea Theme (Dark Teal based) */
+  [data-theme="deep-sea"] {
+    --background: 180 10% 95%;
+    --foreground: 195 30% 20%;
+    --card: 180 10% 92%;
+    --card-foreground: 195 30% 20%;
+    --popover: 180 10% 90%;
+    --popover-foreground: 195 30% 20%;
+    --primary: 195 28% 35%;
+    --primary-foreground: 180 20% 95%;
+    --secondary: 180 22% 67%;
+    --secondary-foreground: 195 30% 15%;
+    --muted: 180 15% 88%;
+    --muted-foreground: 195 30% 40%;
+    --accent: 124 28% 53%;
+    --accent-foreground: 180 20% 95%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 180 15% 80%;
+    --input: 180 10% 92%;
+    --ring: 124 28% 53%;
+  }
+
+  .dark[data-theme="deep-sea"] {
+    --background: 195 28% 13%;
+    --foreground: 180 20% 90%;
+    --card: 195 28% 16%;
+    --card-foreground: 180 20% 90%;
+    --popover: 195 28% 18%;
+    --popover-foreground: 180 20% 90%;
+    --primary: 124 28% 53%;
+    --primary-foreground: 180 20% 95%;
+    --secondary: 180 22% 67%;
+    --secondary-foreground: 195 30% 10%;
+    --muted: 195 28% 20%;
+    --muted-foreground: 180 20% 70%;
+    --accent: 180 30% 75%;
+    --accent-foreground: 195 30% 10%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 195 28% 22%;
+    --input: 195 28% 16%;
+    --ring: 124 28% 53%;
+  }
+
+  /* Forest Mist Theme */
+  [data-theme="forest-mist"] {
+    --background: 100 20% 95%;
+    --foreground: 120 25% 25%;
+    --card: 100 20% 92%;
+    --card-foreground: 120 25% 25%;
+    --popover: 100 20% 90%;
+    --popover-foreground: 120 25% 25%;
+    --primary: 130 40% 45%;
+    --primary-foreground: 90 50% 95%;
+    --secondary: 90 30% 65%;
+    --secondary-foreground: 120 25% 20%;
+    --muted: 100 20% 88%;
+    --muted-foreground: 120 25% 45%;
+    --accent: 140 35% 55%;
+    --accent-foreground: 90 50% 95%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 100 15% 80%;
+    --input: 100 20% 92%;
+    --ring: 130 40% 45%;
+  }
+
+  .dark[data-theme="forest-mist"] {
+    --background: 120 15% 15%;
+    --foreground: 90 30% 85%;
+    --card: 120 15% 18%;
+    --card-foreground: 90 30% 85%;
+    --popover: 120 15% 20%;
+    --popover-foreground: 90 30% 85%;
+    --primary: 130 45% 55%;
+    --primary-foreground: 120 15% 10%;
+    --secondary: 90 25% 45%;
+    --secondary-foreground: 90 30% 90%;
+    --muted: 120 15% 22%;
+    --muted-foreground: 90 30% 70%;
+    --accent: 140 40% 60%;
+    --accent-foreground: 120 15% 10%;
+    --destructive: 0 55% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 120 15% 28%;
+    --input: 120 15% 18%;
+    --ring: 130 45% 55%;
+  }
+
+  /* Chart colors are not themed per palette for simplicity, but could be */
+  :root, [data-theme] {
+    --chart-1: hsl(var(--primary));
+    --chart-2: hsl(var(--accent));
+    --chart-3: 180 50% 70%; /* A generic third color */
+    --chart-4: 200 80% 70%; /* A generic fourth color */
+    --chart-5: hsl(var(--secondary));
+  }
+
+  /* Default radius */
+  :root, [data-theme] {
+    --radius: 0.5rem;
   }
 }
 
@@ -61,8 +187,7 @@
     @apply border-border;
   }
   body {
-    @apply text-foreground;
-    background-color: hsl(var(--background)); /* Solid background color */
+    @apply bg-background text-foreground;
     min-height: 100vh;
     font-family: var(--font-geist-sans);
   }

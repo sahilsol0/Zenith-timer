@@ -4,6 +4,7 @@ import { Geist } from 'next/font/google';
 import './globals.css';
 import { TimerProvider } from '@/contexts/TimerContext';
 import AppShell from '@/components/layout/AppShell'; // Import the new AppShell component
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const geist = Geist({
   subsets: ['latin'],
@@ -22,10 +23,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} antialiased flex flex-col min-h-screen bg-background`}>
-        <TimerProvider> {/* TimerProvider wraps AppShell */}
-          <AppShell>{children}</AppShell>
-        </TimerProvider>
+      <body className={`${geist.variable} antialiased flex flex-col min-h-screen`}>
+        <ThemeProvider>
+          <TimerProvider> {/* TimerProvider wraps AppShell */}
+            <AppShell>{children}</AppShell>
+          </TimerProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

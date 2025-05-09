@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-    darkMode: ["class"],
+    darkMode: ["class"], // Make sure 'class' is enabled for dark mode
     content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -61,15 +61,15 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			sidebar: {
-  				DEFAULT: 'hsl(var(--sidebar-background))',
-  				foreground: 'hsl(var(--sidebar-foreground))',
-  				primary: 'hsl(var(--sidebar-primary))',
-  				'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
-  				accent: 'hsl(var(--sidebar-accent))',
-  				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-  				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))'
+  			sidebar: { // Updated to use main theme variables for consistency
+  				DEFAULT: 'hsl(var(--card))', // Use card as base for sidebar
+  				foreground: 'hsl(var(--card-foreground))',
+  				primary: 'hsl(var(--primary))',
+  				'primary-foreground': 'hsl(var(--primary-foreground))',
+  				accent: 'hsl(var(--accent))',
+  				'accent-foreground': 'hsl(var(--accent-foreground))',
+  				border: 'hsl(var(--border))',
+  				ring: 'hsl(var(--ring))'
   			}
   		},
   		borderRadius: {
