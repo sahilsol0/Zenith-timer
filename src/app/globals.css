@@ -4,57 +4,55 @@
 
 @layer base {
   :root {
-    --gradient-start-color: 180 45% 65%; /* Teal/Cyan for gradient */
-    --gradient-end-color: 124 35% 70%; /* Soft Green for gradient */
+    --gradient-start-color: 40 100% 96%; /* Fallback if body bg-image is used, matches new background */
+    --gradient-end-color: 40 100% 96%; /* Fallback, matches new background */
 
-    --background: 195 28% 13%; /* #1c2628 - Dark Teal for component backgrounds */
-    --foreground: 180 20% 90%; /* Light Cyan/Off-white for text */
+    --background: 40 100% 96%; /* Light Cream/Beige */
+    --foreground: 30 15% 20%; /* Dark Brown */
 
-    --card: 195 28% 16%; /* Slightly lighter Dark Teal for cards */
-    --card-foreground: 180 20% 90%;
+    --card: 40 100% 95%; /* Slightly off-white from background */
+    --card-foreground: 30 15% 20%; /* Dark Brown */
 
-    --popover: 195 28% 10%; /* Darker for popovers */
-    --popover-foreground: 180 20% 90%;
+    --popover: 40 100% 93%; /* Slightly darker for popovers */
+    --popover-foreground: 30 15% 20%; /* Dark Brown */
 
-    --primary: 124 28% 53%; /* #6FA071 - Muted Green for primary actions */
-    --primary-foreground: 124 20% 96%; /* Very light for text on Muted Green */
+    --primary: 15 70% 55%; /* Terracotta/Burnt Orange - for active states, highlights */
+    --primary-foreground: 40 100% 97%; /* Very Light Cream - for text on primary */
 
-    --secondary: 180 22% 67%; /* #9fb8b8 - Soft Cyan for secondary elements/buttons */
-    --secondary-foreground: 195 28% 13%; /* Dark Teal for text on Soft Cyan buttons */
+    --secondary: 30 15% 20%; /* Dark Brown - for main call-to-action buttons */
+    --secondary-foreground: 40 100% 96%; /* Light Cream - for text on dark buttons */
 
-    --muted: 195 28% 20%; /* Darker, less saturated version of background */
-    --muted-foreground: 180 20% 65%; /* Grayish cyan for muted text */
+    --muted: 35 60% 90%; /* Light Peach/Beige - for unselected chip backgrounds */
+    --muted-foreground: 30 10% 45%; /* Medium-Dark Brown - for secondary text */
 
-    --accent: 180 30% 75%; /* Brighter Soft Cyan for accents */
-    --accent-foreground: 195 28% 13%; /* Dark Teal text on accent */
+    --accent: 15 75% 60%; /* Slightly Brighter Terracotta - for accents */
+    --accent-foreground: 40 100% 97%; /* Very Light Cream - for text on accent */
     
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 60% 50%; /* Standard Red */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
 
-    --border: 195 28% 22%; /* Border for components */
-    --input: 195 28% 22%; /* Input background */
-    --ring: 124 28% 53%; /* Muted Green for focus rings */
+    --border: 35 25% 85%; /* Light, Warm Gray */
+    --input: 40 100% 95%; /* Same as card background */
+    --ring: 15 70% 60%; /* Terracotta for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Default radius, components might override */
 
     /* Chart colors (can be adjusted if charts are used) */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 15 70% 55%;
+    --chart-2: 30 50% 70%;
+    --chart-3: 45 60% 60%;
+    --chart-4: 20 80% 70%;
+    --chart-5: 30 15% 40%;
   }
 
-  /* Remove dark class specific overrides if we are not using a toggle,
-     and want the :root to define the single theme.
-     For this project, we'll use :root as the main theme.
-     The default shadcn setup includes .dark overrides, we can simplify if only one theme.
-     Keeping .dark for now, but it will inherit from :root unless specific dark values are set.
+  /* 
+    The .dark class can be used if a dark mode toggle is implemented.
+    For now, it will inherit from :root.
   */
   .dark {
     /* Example: if you wanted a dark mode toggle with different values */
-    /* --background: 0 0% 3.9%; */
-    /* --foreground: 0 0% 98%; */
+    /* --background: 30 15% 10%; */
+    /* --foreground: 40 100% 90%; */
   }
 }
 
@@ -63,8 +61,8 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    background-image: linear-gradient(to bottom right, hsl(var(--gradient-start-color)), hsl(var(--gradient-end-color)));
+    @apply text-foreground;
+    background-color: hsl(var(--background)); /* Solid background color */
     min-height: 100vh;
     font-family: var(--font-geist-sans);
   }
