@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutGridIcon, PlusCircleIcon, CogIcon, HomeIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-// Removed useGlobalTimer import as isTimerActive is no longer used for positioning here
+import { useGlobalTimer } from '@/contexts/TimerContext';
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
@@ -18,7 +18,7 @@ const navItems = [
 const BottomNavigation = () => {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  // const { isTimerActive } = useGlobalTimer(); // No longer needed for positioning
+  const { timerState } = useGlobalTimer(); // Get timer state
 
   if (typeof isMobile === 'undefined' || !isMobile) {
     return null;
@@ -29,8 +29,6 @@ const BottomNavigation = () => {
       "fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-md",
       "md:hidden", // Only visible on mobile
       "h-16"       // Height of the navigation bar
-      // Removed conditional bottom positioning: isTimerActive ? "bottom-16 md:bottom-0" : "bottom-0"
-      // It's now always effectively bottom-0 when rendered due to "fixed bottom-0"
     )}>
       <div className={cn(
         "flex justify-around items-stretch h-full max-w-md mx-auto",
@@ -45,6 +43,10 @@ const BottomNavigation = () => {
           }
           if (item.href === '/create' && pathname.startsWith('/templates')) effectiveIsActive = false;
 
+          const isHomeButton = item.href === '/';
+          // Timer is considered "active" for disabling purposes if it's currently running or paused.
+          const isTimerSessionActive = timerState.isRunning || timerState.isPaused;
+          const disableHomeButton = isHomeButton && isTimerSessionActive;
 
           return (
             <Link
@@ -52,8 +54,16 @@ const BottomNavigation = () => {
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 text-xs p-1 transition-colors",
-                effectiveIsActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                effectiveIsActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                disableHomeButton && "opacity-50 pointer-events-none" // Apply styles if button is disabled
               )}
+              aria-disabled={disableHomeButton ? 'true' : undefined} // Accessibility: mark as disabled
+              tabIndex={disableHomeButton ? -1 : undefined} // Accessibility: remove from tab order if disabled
+              onClick={(e) => { // Prevent default navigation if disabled (belt-and-suspenders with pointer-events-none)
+                if (disableHomeButton) {
+                  e.preventDefault();
+                }
+              }}
             >
               <item.icon className={cn("h-5 w-5 mb-0.5", effectiveIsActive ? "text-primary" : "")} />
               {item.label}
@@ -66,4 +76,3 @@ const BottomNavigation = () => {
 };
 
 export default BottomNavigation;
-
