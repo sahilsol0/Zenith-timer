@@ -18,7 +18,7 @@ export default {
     },
   	extend: {
       fontFamily: {
-        sans: ['var(--font-geist-sans)'],
+        sans: ['var(--font-inter)'], // Updated to Inter
       },
   		colors: {
   			background: 'hsl(var(--background))',

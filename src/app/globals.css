@@ -5,34 +5,104 @@
 @layer base {
   /* Base :root variables will act as fallback or initial load state */
   :root {
-    --background: 40 100% 96%; /* Zenith Default Light */
-    --foreground: 30 15% 20%;
-    --card: 40 100% 95%;
-    --card-foreground: 30 15% 20%;
-    --popover: 40 100% 93%;
-    --popover-foreground: 30 15% 20%;
-    --primary: 15 70% 55%;
-    --primary-foreground: 40 100% 97%;
-    --secondary: 30 15% 20%;
-    --secondary-foreground: 40 100% 96%;
-    --muted: 35 60% 90%;
-    --muted-foreground: 30 10% 45%;
-    --accent: 15 75% 60%;
-    --accent-foreground: 40 100% 97%;
-    --destructive: 0 60% 50%;
+    --background: 195 28% 13%; /* Dark Teal (#1c2628) - Using HSL equivalent */
+    --foreground: 180 20% 90%; /* Soft Cyan (#9fb8b8) for text on dark bg - Using HSL for contrast */
+    --card: 195 28% 16%;
+    --card-foreground: 180 20% 90%;
+    --popover: 195 28% 18%;
+    --popover-foreground: 180 20% 90%;
+    --primary: 124 28% 53%; /* Muted Green (#6FA071) for primary interactive elements */
+    --primary-foreground: 180 20% 95%;
+    --secondary: 180 22% 67%; /* Soft Cyan (#9fb8b8) as secondary */
+    --secondary-foreground: 195 30% 10%;
+    --muted: 195 28% 20%;
+    --muted-foreground: 180 20% 70%;
+    --accent: 180 30% 75%; /* A lighter cyan for accents if needed, or can be Muted Green */
+    --accent-foreground: 195 30% 10%;
+    --destructive: 0 63% 40%;
     --destructive-foreground: 0 0% 98%;
-    --border: 35 25% 85%;
-    --input: 40 100% 95%;
-    --ring: 15 70% 60%;
+    --border: 195 28% 22%;
+    --input: 195 28% 16%;
+    --ring: 124 28% 53%; /* Muted Green for focus rings */
     --radius: 0.5rem;
-    --chart-1: 15 70% 55%;
-    --chart-2: 30 50% 70%;
-    --chart-3: 45 60% 60%;
-    --chart-4: 20 80% 70%;
-    --chart-5: 30 15% 40%;
+    --chart-1: 124 28% 53%; /* Muted Green */
+    --chart-2: 180 22% 67%; /* Soft Cyan */
+    --chart-3: 180 30% 75%; /* Lighter Cyan */
+    --chart-4: 200 80% 70%; /* A generic fourth color */
+    --chart-5: 195 30% 20%; /* Darker for contrast if needed */
   }
 
-  /* Zenith Default Theme */
+  /* Zenith Default Theme (using the new proposal colors) */
+  [data-theme="zenith-custom"] {
+    --background: 195 28% 13%; /* Dark Teal (#1c2628) */
+    --foreground: 180 20% 90%; /* Soft Cyan (#9fb8b8) for text on dark bg */
+    --card: 195 28% 16%; /* Slightly lighter than background for cards */
+    --card-foreground: 180 20% 90%;
+    --popover: 195 28% 18%; /* Popovers slightly lighter still */
+    --popover-foreground: 180 20% 90%;
+    --primary: 124 28% 53%; /* Muted Green (#6FA071) */
+    --primary-foreground: 180 20% 95%; /* Light text for primary buttons */
+    --secondary: 180 22% 67%; /* Soft Cyan (#9fb8b8) */
+    --secondary-foreground: 195 30% 10%; /* Darker text for secondary elements */
+    --muted: 195 28% 20%;
+    --muted-foreground: 180 20% 70%;
+    --accent: 124 28% 53%; /* Muted Green as accent */
+    --accent-foreground: 180 20% 95%;
+    --destructive: 0 63% 40%; /* Standard destructive red */
+    --destructive-foreground: 0 0% 98%;
+    --border: 195 28% 22%; /* Subtle border */
+    --input: 195 28% 16%; /* Input background same as card */
+    --ring: 124 28% 53%; /* Muted Green for focus rings */
+  }
+
+  .dark[data-theme="zenith-custom"] {
+    /* Dark mode is the default for zenith-custom as per proposal */
+    --background: 195 28% 13%;
+    --foreground: 180 20% 90%;
+    --card: 195 28% 16%;
+    --card-foreground: 180 20% 90%;
+    --popover: 195 28% 18%;
+    --popover-foreground: 180 20% 90%;
+    --primary: 124 28% 53%;
+    --primary-foreground: 180 20% 95%;
+    --secondary: 180 22% 67%;
+    --secondary-foreground: 195 30% 10%;
+    --muted: 195 28% 20%;
+    --muted-foreground: 180 20% 70%;
+    --accent: 180 30% 75%; /* Using a lighter cyan for accent in dark mode */
+    --accent-foreground: 195 30% 10%;
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 195 28% 22%;
+    --input: 195 28% 16%;
+    --ring: 124 28% 53%;
+  }
+
+  /* Light version of the Zenith Custom theme (if explicitly chosen) */
+  .light[data-theme="zenith-custom"] {
+    --background: 180 20% 95%; /* Light Soft Cyan Base */
+    --foreground: 195 28% 13%; /* Dark Teal Text */
+    --card: 180 20% 92%;
+    --card-foreground: 195 28% 13%;
+    --popover: 180 20% 90%;
+    --popover-foreground: 195 28% 13%;
+    --primary: 124 28% 48%; /* Slightly darker Muted Green for contrast on light bg */
+    --primary-foreground: 180 20% 97%;
+    --secondary: 195 28% 25%; /* Darker Teal for secondary elements */
+    --secondary-foreground: 180 20% 95%;
+    --muted: 180 20% 88%;
+    --muted-foreground: 195 28% 30%;
+    --accent: 124 28% 53%; /* Muted Green as accent */
+    --accent-foreground: 180 20% 97%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 180 20% 80%;
+    --input: 180 20% 92%;
+    --ring: 124 28% 48%;
+  }
+
+
+  /* Zenith Default Theme (Original - keeping for reference/fallback) */
   [data-theme="zenith-default"] {
     --background: 40 100% 96%;
     --foreground: 30 15% 20%;
@@ -77,7 +147,7 @@
     --ring: 15 70% 65%;
   }
 
-  /* Deep Sea Theme (Dark Teal based) */
+  /* Deep Sea Theme (Dark Teal based - Old, for reference if needed) */
   [data-theme="deep-sea"] {
     --background: 180 10% 95%;
     --foreground: 195 30% 20%;
@@ -122,7 +192,7 @@
     --ring: 124 28% 53%;
   }
 
-  /* Forest Mist Theme */
+  /* Forest Mist Theme (Old, for reference if needed) */
   [data-theme="forest-mist"] {
     --background: 100 20% 95%;
     --foreground: 120 25% 25%;
@@ -189,6 +259,6 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    font-family: var(--font-geist-sans);
+    font-family: var(--font-inter); /* Updated to Inter */
   }
 }

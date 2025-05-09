@@ -1,14 +1,15 @@
 
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Inter } from 'next/font/google'; // Import Inter
 import './globals.css';
 import { TimerProvider } from '@/contexts/TimerContext';
-import AppShell from '@/components/layout/AppShell'; // Import the new AppShell component
+import AppShell from '@/components/layout/AppShell';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
-const geist = Geist({
+// Instantiate Inter font
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-geist-sans',
+  variable: '--font-inter', // Define a CSS variable for Inter
 });
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} antialiased flex flex-col min-h-screen`}>
+      <body className={`${inter.variable} antialiased flex flex-col min-h-screen`}> {/* Use Inter font variable */}
         <ThemeProvider>
           <TimerProvider> {/* TimerProvider wraps AppShell */}
             <AppShell>{children}</AppShell>
