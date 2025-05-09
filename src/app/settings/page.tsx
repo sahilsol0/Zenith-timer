@@ -40,6 +40,8 @@ export default function SettingsPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { themeMode, setThemeMode, currentPaletteId, setCurrentPaletteId } = useTheme();
+  const [currentNotificationPermission, setCurrentNotificationPermission] = useState<NotificationPermission | undefined>(undefined);
+
 
   useEffect(() => {
     const storedSound = localStorage.getItem('zenithTimerSoundEnabled');
@@ -47,6 +49,10 @@ export default function SettingsPage() {
 
     const storedNotifs = localStorage.getItem('zenithTimerNotificationsEnabled');
     if (storedNotifs) setNotificationsEnabled(JSON.parse(storedNotifs));
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setCurrentNotificationPermission(Notification.permission);
+    }
   }, []);
 
   const handleSoundToggle = (checked: boolean) => {
@@ -55,10 +61,30 @@ export default function SettingsPage() {
     toast({ title: 'Sound Settings Updated', description: `Sound notifications are now ${checked ? 'enabled' : 'disabled'}.` });
   };
 
-  const handleNotificationsToggle = (checked: boolean) => {
+  const handleNotificationsToggle = async (checked: boolean) => {
     setNotificationsEnabled(checked);
     localStorage.setItem('zenithTimerNotificationsEnabled', JSON.stringify(checked));
-    toast({ title: 'Notification Settings Updated', description: `Browser notifications are now ${checked ? 'enabled (permission pending)' : 'disabled'}.` });
+  
+    if (checked && typeof window !== 'undefined' && 'Notification' in window) {
+      let permission = Notification.permission;
+      if (permission === 'default') {
+        permission = await Notification.requestPermission();
+        setCurrentNotificationPermission(permission);
+      }
+  
+      if (permission === 'granted') {
+        toast({ title: 'Notification Settings Updated', description: 'Browser notifications are now enabled.' });
+        // Test notification
+        new Notification("Zenith Timer Notifications", { body: "You will now receive notifications!", icon: "/icon.png" });
+
+      } else if (permission === 'denied') {
+        toast({ title: 'Notification Permission Denied', description: 'Browser notifications were blocked. You may need to enable them in your browser settings.', variant: 'destructive' });
+      } else { // default, after prompting but user dismissed
+        toast({ title: 'Notification Settings Updated', description: 'Browser notifications enabled, permission pending user action.' });
+      }
+    } else if (!checked) {
+      toast({ title: 'Notification Settings Updated', description: 'Browser notifications are now disabled.' });
+    }
   };
 
   const handleExportTimers = () => {
@@ -196,6 +222,12 @@ export default function SettingsPage() {
               <Label htmlFor="notifications-toggle" className="text-base sm:text-lg">Enable Browser Notifications</Label>
               <Switch id="notifications-toggle" checked={notificationsEnabled} onCheckedChange={handleNotificationsToggle} />
             </div>
+             {currentNotificationPermission === 'denied' && (
+                <p className="text-xs text-destructive">Browser notifications are currently blocked by your browser. You may need to change this in your browser&apos;s site settings.</p>
+            )}
+            {currentNotificationPermission === 'default' && notificationsEnabled && (
+                <p className="text-xs text-muted-foreground">Browser will ask for notification permission when needed.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -243,3 +275,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

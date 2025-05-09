@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
@@ -35,6 +36,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  env: {
+    NEXT_PUBLIC_BASE_PATH: basePath, // Expose basePath to client-side code
+  }
 };
 
 export default nextConfig;
+
