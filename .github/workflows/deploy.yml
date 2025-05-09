@@ -1,0 +1,45 @@
+# .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # Or your default branch (e.g., master)
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to push to gh-pages branch
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x' # Or your preferred Node.js version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js site
+        # The GITHUB_REPOSITORY environment variable is automatically set by GitHub Actions.
+        # next.config.ts uses this to set the basePath and assetPrefix.
+        run: npm run build
+        # The `next build` command with `output: 'export'` in next.config.ts
+        # will automatically export the static site to the 'out' directory.
+        # The .nojekyll file from the public directory will be copied to 'out'.
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy: ${{ github.event.head_commit.message }}'
+          # force_orphan: true # Optional: creates a new branch history every time, useful for gh-pages
+          # cname: your.custom.domain.com # Optional: if you are using a custom domain
