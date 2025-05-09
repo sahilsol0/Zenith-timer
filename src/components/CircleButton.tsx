@@ -20,20 +20,19 @@ const CircleButton = ({
 }: CircleButtonProps) => {
   
   const sizeClasses = {
-    sm: 'h-20 w-20 sm:h-24 sm:w-24 text-xs sm:text-sm',
-    md: 'h-28 w-28 sm:h-36 sm:w-36 text-sm sm:text-lg',
-    lg: 'h-36 w-36 sm:h-48 sm:w-48 text-base sm:text-xl',
+    sm: 'h-16 w-16 sm:h-20 sm:w-20 text-xs',
+    md: 'h-20 w-20 sm:h-28 sm:w-28 text-sm',
+    lg: 'h-28 w-28 sm:h-36 sm:w-36 text-base',
   };
 
   const iconSizeClasses = {
-    sm: 'h-5 w-5 sm:h-6 sm:w-6',
-    md: 'h-6 w-6 sm:h-8 sm:w-8',
-    lg: 'h-8 w-8 sm:h-10 sm:w-10',
+    sm: 'h-4 w-4 sm:h-5 sm:w-5',
+    md: 'h-5 w-5 sm:h-6 sm:w-6',
+    lg: 'h-6 w-6 sm:h-8 sm:w-8',
   }
 
   const variantClasses = {
     primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-    // Changed secondary to be an outline style using accent colors
     secondary: 'border border-accent text-accent bg-transparent hover:bg-accent hover:text-accent-foreground',
     destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
   };
