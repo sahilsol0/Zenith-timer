@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useGlobalTimer } from '@/contexts/TimerContext';
@@ -6,6 +7,7 @@ import { PauseIcon, PlayIcon, SkipForwardIcon } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile
 
 const GlobalTimerBar = () => {
   const {
@@ -17,6 +19,7 @@ const GlobalTimerBar = () => {
     skipToNext,
     isTimerActive,
   } = useGlobalTimer();
+  const isMobile = useIsMobile(); // Determine if current view is mobile
 
   if (!isTimerActive || !activeConfig) {
     return null;
@@ -60,15 +63,18 @@ const GlobalTimerBar = () => {
   return (
     <div
       className={cn(
-        'fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg transition-transform duration-300 ease-in-out',
-        'md:bottom-0', // On desktop, it's just at the bottom
+        'fixed left-0 right-0 z-40 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg transition-transform duration-300 ease-in-out',
+        { // Conditional bottom positioning
+          'bottom-16': isMobile && isTimerActive, // On mobile & timer active: GTB sits above BottomNavigation
+          'bottom-0': !isMobile || !isTimerActive,   // On desktop, or on mobile if timer not active (GTB is hidden anyway by translate)
+        },
         'h-16 md:h-14', // Height: 64px on mobile, 56px on desktop
-        'pb-[env(safe-area-inset-bottom)] md:pb-0', // iOS notch padding for content within the bar
-        isTimerActive ? 'translate-y-0' : 'translate-y-full'
+        { // Safe area padding for the bar itself. Only apply if it's at the very bottom of the viewport.
+          'pb-[env(safe-area-inset-bottom)]': !isMobile && isTimerActive,
+        },
+        isTimerActive ? 'translate-y-0' : 'translate-y-full' // Controls visibility by sliding in/out
       )}
     >
-      {/* Removed spacer div: <div className="md:hidden h-16" /> */}
-
       <Link href="/timer" className="block h-full w-full cursor-pointer">
         <div className="container mx-auto px-3 sm:px-4 h-full flex items-center justify-between">
           <div className="flex-1 min-w-0">
@@ -115,9 +121,9 @@ const GlobalTimerBar = () => {
       </Link>
       <Progress
         value={progressPercentage}
-        className="absolute bottom-0 left-0 right-0 h-0.5 bg-transparent"
+        className="absolute bottom-0 left-0 right-0 h-0.5 bg-transparent" // Progress bar sits at the bottom of this component
         indicatorClassName={cn(
-            'transition-all duration-1000 ease-linear', // Ensure smooth progress animation
+            'transition-all duration-1000 ease-linear',
             timerState.isComplete ? 'bg-green-500' : 
             timerState.isResting || timerState.isBetweenSectionsRest ? 'bg-accent' : 'bg-primary'
         )}

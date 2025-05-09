@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutGridIcon, PlusCircleIcon, CogIcon, HomeIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useGlobalTimer } from '@/contexts/TimerContext';
+// Removed useGlobalTimer import as isTimerActive is no longer used for positioning here
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
@@ -18,7 +18,7 @@ const navItems = [
 const BottomNavigation = () => {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const { isTimerActive } = useGlobalTimer();
+  // const { isTimerActive } = useGlobalTimer(); // No longer needed for positioning
 
   if (typeof isMobile === 'undefined' || !isMobile) {
     return null;
@@ -26,23 +26,24 @@ const BottomNavigation = () => {
 
   return (
     <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-md", // z-30 to be below GlobalTimerBar (z-40)
-      "md:hidden",
-      "h-16", // Height of the navigation bar
-      isTimerActive ? "bottom-16 md:bottom-0" : "bottom-0" // If timer bar is active (h-16), push this up
+      "fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border shadow-md",
+      "md:hidden", // Only visible on mobile
+      "h-16"       // Height of the navigation bar
+      // Removed conditional bottom positioning: isTimerActive ? "bottom-16 md:bottom-0" : "bottom-0"
+      // It's now always effectively bottom-0 when rendered due to "fixed bottom-0"
     )}>
       <div className={cn(
         "flex justify-around items-stretch h-full max-w-md mx-auto",
-        "pb-[env(safe-area-inset-bottom)]"
+        "pb-[env(safe-area-inset-bottom)]" // Ensures content within respects safe area
       )}>
         {navItems.map((item) => {
           let effectiveIsActive = pathname === item.href;
           if (item.href === '/templates' && (pathname === '/templates' || pathname.startsWith('/timer') || pathname.startsWith('/create'))) {
              effectiveIsActive = true;
-          } else if (item.href !== '/' && pathname.startsWith(item.href) && item.href !== '/templates') { // Ensure /templates doesn't make /create active
+          } else if (item.href !== '/' && pathname.startsWith(item.href) && item.href !== '/templates') {
              effectiveIsActive = true;
           }
-          if (item.href === '/create' && pathname.startsWith('/templates')) effectiveIsActive = false; // Fix for /create being active on /templates
+          if (item.href === '/create' && pathname.startsWith('/templates')) effectiveIsActive = false;
 
 
           return (
@@ -65,3 +66,4 @@ const BottomNavigation = () => {
 };
 
 export default BottomNavigation;
+
