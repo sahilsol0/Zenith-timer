@@ -48,22 +48,24 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playSound = useCallback((soundType: 'tick' | 'segmentEnd' | 'sequenceComplete') => {
+  useEffect(() => {
+    // Initialize Audio object once on mount
     if (typeof window !== 'undefined') {
+      audioRef.current = new Audio();
+    }
+  }, []);
+
+  const playSound = useCallback((soundType: 'tick' | 'segmentEnd' | 'sequenceComplete') => {
+    if (typeof window !== 'undefined' && audioRef.current) {
       const soundEnabledRaw = localStorage.getItem('zenithTimerSoundEnabled');
       const soundEnabled = soundEnabledRaw ? JSON.parse(soundEnabledRaw) : true;
 
       if (!soundEnabled) {
         return;
       }
-
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      }
       
       const soundFile = soundFiles[soundType];
       if (soundFile) {
-        // Construct full path if basePath is set (for GitHub Pages deployment)
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
         audioRef.current.src = basePath + soundFile;
         audioRef.current.play().catch(e => console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundFile} exists at ${basePath}${soundFile}. Base path: '${basePath}'`));

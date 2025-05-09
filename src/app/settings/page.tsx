@@ -75,7 +75,8 @@ export default function SettingsPage() {
       if (permission === 'granted') {
         toast({ title: 'Notification Settings Updated', description: 'Browser notifications are now enabled.' });
         // Test notification
-        new Notification("Zenith Timer Notifications", { body: "You will now receive notifications!", icon: "/icon.png" });
+        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+        new Notification("Zenith Timer Notifications", { body: "You will now receive notifications!", icon: basePath + "/icon.png" });
 
       } else if (permission === 'denied') {
         toast({ title: 'Notification Permission Denied', description: 'Browser notifications were blocked. You may need to enable them in your browser settings.', variant: 'destructive' });
