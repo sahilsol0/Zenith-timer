@@ -38,15 +38,36 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const [timerState, setTimerState] = useState<TimerState>(initialTimerState);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null); // For sound notifications
+  const audioRef = useRef<HTMLAudioElement | null>(null); 
 
-  const playSound = useCallback((soundType: 'tick' | 'complete' | 'transition') => {
-    // This is a placeholder. In a real app, you'd have actual sound files.
-    console.log(`Playing sound: ${soundType}`);
-    if (typeof window !== 'undefined' && !audioRef.current) {
-        // Example: audioRef.current = new Audio('/sounds/transition.mp3');
+  const playSound = useCallback((soundType: 'tick' | 'segmentEnd' | 'sequenceComplete') => {
+    if (typeof window !== 'undefined') {
+      const soundEnabledRaw = localStorage.getItem('zenithTimerSoundEnabled');
+      const soundEnabled = soundEnabledRaw ? JSON.parse(soundEnabledRaw) : true; // Default to true if not set
+
+      if (!soundEnabled) {
+        return;
+      }
+
+      // In a real app, you would have different audio files for different soundTypes.
+      // For now, we'll just log.
+      console.log(`Playing sound: ${soundType}`);
+      
+      // Example of how you might load and play different sounds:
+      // let soundFile = '';
+      // switch(soundType) {
+      //   case 'tick': soundFile = '/sounds/tick.mp3'; break;
+      //   case 'segmentEnd': soundFile = '/sounds/alarm.mp3'; break; // "Alarm sound" for segment end
+      //   case 'sequenceComplete': soundFile = '/sounds/complete.mp3'; break;
+      // }
+      // if (soundFile) {
+      //   if (!audioRef.current) {
+      //     audioRef.current = new Audio();
+      //   }
+      //   audioRef.current.src = soundFile;
+      //   audioRef.current.play().catch(e => console.warn("Audio play failed:", e));
+      // }
     }
-    // audioRef.current?.play().catch(e => console.warn("Audio play failed:", e));
   }, []);
 
   const updateTimerDisplay = useCallback((
@@ -87,7 +108,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
     const currentSegment = configuration.segments[currentSegmentIndex];
 
-    if (isBetweenSectionsRest) { // Was resting between sections, start new cycle
+    if (isBetweenSectionsRest) { 
       currentSegmentIndex = 0;
       currentWorkItemIndex = 0;
       isResting = false;
@@ -95,70 +116,62 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       const nextSegment = configuration.segments[currentSegmentIndex];
       const nextWorkItem = nextSegment.work[currentWorkItemIndex];
       updateTimerDisplay(nextSegment.time, nextWorkItem, nextSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest);
-      playSound('transition');
+      playSound('segmentEnd');
       return;
     }
 
-    if (isResting) { // Was resting within a segment, move to next work item or segment
+    if (isResting) { 
       isResting = false;
-      // currentWorkItemIndex was already advanced before rest, or segment finished.
-      // Let's check if we need to move to next segment after this rest.
       if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
-         currentWorkItemIndex = 0; // Reset for new segment
+         currentWorkItemIndex = 0; 
          currentSegmentIndex++;
       }
-    } else { // Was in a work item
+    } else { 
       currentWorkItemIndex++;
     }
     
-    // Check if work items in current segment are done
     if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
-      // Work items done. Does this segment have a rest period?
-      if (currentSegment.rest > 0 && !isResting) { // Ensure not already resting
+      if (currentSegment.rest > 0 && !isResting) { 
         isResting = true;
         updateTimerDisplay(currentSegment.rest, currentSegment.restString, currentSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest);
-        playSound('transition');
+        playSound('segmentEnd');
         return;
       }
-      // No rest or rest just finished, move to next segment
-      isResting = false; // Ensure reset
-      currentWorkItemIndex = 0; // Reset for new segment
+      isResting = false; 
+      currentWorkItemIndex = 0; 
       currentSegmentIndex++;
     }
 
-    // Check if all segments are done
     if (currentSegmentIndex >= configuration.segments.length) {
       if (configuration.repeat) {
         if (configuration.restBetweenSections > 0) {
           isBetweenSectionsRest = true;
           updateTimerDisplay(configuration.restBetweenSections, "Rest before repeating sequence", "Section Break", 0, 0, false, isBetweenSectionsRest);
-          playSound('transition');
-        } else { // No rest between sections, immediately restart
+          playSound('segmentEnd');
+        } else { 
           currentSegmentIndex = 0;
           currentWorkItemIndex = 0;
-          isResting = false; // ensure not resting
-          isBetweenSectionsRest = false; // ensure not between sections rest
+          isResting = false; 
+          isBetweenSectionsRest = false; 
           const nextSegment = configuration.segments[currentSegmentIndex];
           updateTimerDisplay(nextSegment.time, nextSegment.work[currentWorkItemIndex], nextSegment.name, currentWorkItemIndex, currentSegmentIndex, false, false);
-          playSound('transition');
+          playSound('segmentEnd');
         }
-      } else { // Not repeating, timer is complete
+      } else { 
         setTimerState(prev => ({ ...prev, isRunning: false, isPaused: false, isComplete: true, description: 'Timer Complete!', timeLeft: 0 }));
-        playSound('complete');
+        playSound('sequenceComplete');
       }
       return;
     }
     
-    // Set up for the next work item/segment
     const nextSegment = configuration.segments[currentSegmentIndex];
     const nextWorkItemInstruction = nextSegment.work[currentWorkItemIndex];
-    updateTimerDisplay(nextSegment.time, nextWorkItemInstruction, nextSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest); // isResting should be false here
-    playSound('transition');
+    updateTimerDisplay(nextSegment.time, nextWorkItemInstruction, nextSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest); 
+    playSound('segmentEnd');
 
   }, [configuration, timerState, updateTimerDisplay, playSound]);
 
 
-  // Initialize or re-initialize timer when configuration changes
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (configuration && configuration.segments.length > 0) {
@@ -172,7 +185,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
             currentSegmentIndex: 0,
             isResting: false,
             isBetweenSectionsRest: false,
-            isRunning: false, // Important: Should not auto-start
+            isRunning: false, 
             isPaused: false,
             isComplete: false,
             totalSegments: configuration.segments.length,
@@ -182,17 +195,15 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
          setTimerState({...initialTimerState, description: "Invalid timer configuration (no work items or segments)."});
       }
     } else {
-      // No configuration or empty segments, reset to initial state
       setTimerState(initialTimerState);
     }
-  }, [configuration]); // Key dependency: re-run when configuration changes
+  }, [configuration]); 
 
-  // Timer tick logic
   useEffect(() => {
     if (timerState.isRunning && !timerState.isPaused && timerState.timeLeft > 0) {
       timerRef.current = setTimeout(() => {
         setTimerState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
-        if (timerState.timeLeft <= 4 && timerState.timeLeft > 1) playSound('tick'); // Tick for last 3 seconds
+        if (timerState.timeLeft <= 4 && timerState.timeLeft > 1) playSound('tick'); 
       }, 1000);
     } else if (timerState.isRunning && !timerState.isPaused && timerState.timeLeft === 0) {
       moveToNextState();
@@ -208,9 +219,9 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         setTimerState(prev => ({...prev, description: "Cannot start: No configuration or segments."}));
         return;
     }
-    if (timerState.isComplete) { // If timer was complete, "Restart" it
+    if (timerState.isComplete) { 
         const initialSegment = configuration.segments[0];
-        if (initialSegment) { // Should always exist if config is valid
+        if (initialSegment) { 
             setTimerState({
                 timeLeft: initialSegment.time,
                 description: initialSegment.work[0],
@@ -219,19 +230,16 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 currentSegmentIndex: 0,
                 isResting: false,
                 isBetweenSectionsRest: false,
-                isRunning: true, // Start immediately
+                isRunning: true, 
                 isPaused: false,
                 isComplete: false,
                 totalSegments: configuration.segments.length,
                 totalWorkItemsInSegment: initialSegment.work.length,
             });
         } else {
-            // Fallback, though should not happen with valid config
              setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
         }
     } else {
-        // Standard start for a new or paused timer (though resume is separate)
-        // This handles starting a timer that was just reset, or a brand new one.
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
     }
   };
@@ -245,7 +253,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false }));
   };
   
-  const resetTimer = () => { // Removed startAfterReset parameter
+  const resetTimer = () => { 
     if (timerRef.current) clearTimeout(timerRef.current);
     if (configuration && configuration.segments.length > 0) {
       const initialSegment = configuration.segments[0];
@@ -257,36 +265,29 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         currentSegmentIndex: 0,
         isResting: false,
         isBetweenSectionsRest: false,
-        isRunning: false, // Always set isRunning to false on reset
+        isRunning: false, 
         isPaused: false,
         isComplete: false,
         totalSegments: configuration.segments.length,
         totalWorkItemsInSegment: initialSegment.work.length,
       });
     } else {
-      setTimerState(initialTimerState); // initialTimerState also has isRunning: false
+      setTimerState(initialTimerState); 
     }
   };
   
   const skipToNext = () => {
-    if (!timerState.isRunning && !timerState.isPaused) { // Only skip if timer has been started
-        if (!configuration || timerState.isComplete) return; // Or if no config or already complete
+    if (!timerState.isRunning && !timerState.isPaused) { 
+        if (!configuration || timerState.isComplete) return; 
     }
     if (timerRef.current) clearTimeout(timerRef.current);
-    moveToNextState(); // Force transition
+    moveToNextState(); 
 
-    // If it was running and not paused, it should continue running on the new state.
-    // If it was paused, it should remain paused but on the new state.
-    // moveToNextState already updates timeLeft. We just need to manage isRunning/isPaused.
     if (timerState.isPaused) {
-        // Stay paused. moveToNextState handles updating the display values.
         setTimerState(prev => ({ ...prev, isRunning: false, isPaused: true}));
     } else if (timerState.isRunning) {
-        // Continue running
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false}));
     }
-    // If it was neither running nor paused (i.e. ready to start),
-    // moveToNextState will set it up, but it won't auto-start.
   };
 
   return {
