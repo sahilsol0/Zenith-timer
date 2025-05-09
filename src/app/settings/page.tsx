@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { LOCAL_STORAGE_CUSTOM_TIMERS_KEY } from '@/lib/constants';
 import type { TimerConfiguration } from '@/lib/types';
-import { DownloadIcon, UploadIcon, Trash2Icon } from 'lucide-react';
+import { DownloadIcon, UploadIcon, Trash2Icon, PaletteIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,7 +106,7 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-2 sm:px-4 py-8">
       <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-8">Settings</h1>
       
       <div className="space-y-8 max-w-2xl">
@@ -166,7 +167,49 @@ export default function SettingsPage() {
             </AlertDialog>
           </CardContent>
         </Card>
+
+        <Card className="bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl sm:text-2xl">
+                <PaletteIcon className="mr-2 sm:mr-3 h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                Theme Customization
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base">
+              Learn how to customize the visual theme of Zenith Timer.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 sm:space-y-4">
+            <p className="text-sm sm:text-base text-foreground/90">
+              The visual theme of Zenith Timer is defined using CSS HSL (Hue, Saturation, Lightness) 
+              variables directly in the <code>src/app/globals.css</code> file.
+            </p>
+            <p className="text-sm sm:text-base text-foreground/90">
+              To customize the theme, developers can edit these variables. Changes are typically
+              reflected immediately by the development server (Hot Module Replacement) or after a page refresh.
+            </p>
+            <div>
+              <h4 className="text-base sm:text-lg font-semibold mb-2 text-foreground">Key Theme Variables:</h4>
+              <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-foreground/80 bg-muted/30 p-3 sm:p-4 rounded-md">
+                <li><code>--primary: 124 28% 53%</code> (Muted Green - Primary interactive elements)</li>
+                <li><code>--secondary: 180 22% 67%</code> (Soft Cyan - Secondary elements)</li>
+                <li><code>--accent: 180 30% 75%</code> (Brighter Soft Cyan - Accents, highlights)</li>
+                <li><code>--background: 195 28% 13%</code> (Dark Teal - Main background for components)</li>
+                <li><code>--foreground: 180 20% 90%</code> (Light Cyan/Off-white - Main text color)</li>
+                <li><code>--card: 195 28% 16%</code> (Slightly lighter Dark Teal - Card backgrounds)</li>
+                <li><code>--border: 195 28% 22%</code> (Borders for components)</li>
+                <li><code>--destructive: 0 63% 31%</code> (Destructive actions)</li>
+                <li><code>--ring: 124 28% 53%</code> (Focus rings, often matches primary)</li>
+              </ul>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground pt-1">
+              Refer to <code>src/app/globals.css</code> for the complete list of theme variables and their current values.
+              Modifying these variables allows for deep customization of the app's look and feel.
+            </p>
+          </CardContent>
+        </Card>
+
       </div>
     </div>
   );
 }
+
