@@ -55,46 +55,51 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     }
   }, []);
 
-  // Reset audioUnlockedRef when the configuration changes,
-  // so the unlocking process is attempted again for a new "session".
   useEffect(() => {
     audioUnlockedRef.current = false;
   }, [configuration]);
 
   const playSound = useCallback((soundType: 'tick' | 'segmentEnd' | 'sequenceComplete') => {
     if (typeof window !== 'undefined' && audioRef.current) {
-      let soundEnabled = true;
+      let soundEnabled = true; // Default
       try {
         const soundEnabledRaw = localStorage.getItem('zenithTimerSoundEnabled');
-        soundEnabled = soundEnabledRaw ? JSON.parse(soundEnabledRaw) : true;
+        if (soundEnabledRaw !== null) { // Only parse if it exists
+          soundEnabled = JSON.parse(soundEnabledRaw);
+        }
       } catch (error) {
-        console.warn('Failed to access localStorage for sound settings:', error);
+        console.warn('Failed to parse sound settings from localStorage, defaulting to true:', error);
+        soundEnabled = true; // Explicitly default on error
       }
 
       if (!soundEnabled) {
+        console.log(`Sound disabled in settings. Not playing ${soundType}.`);
         return;
       }
 
-      // For tick sounds, only play if audio has been successfully unlocked by a non-tick sound previously.
       if (soundType === 'tick' && !audioUnlockedRef.current) {
+        // console.log('Audio not unlocked, skipping tick sound.'); // Optional: more verbose logging
         return;
       }
 
       const soundFile = soundFiles[soundType];
       if (soundFile) {
         audioRef.current.src = basePath + soundFile;
+        audioRef.current.load(); // Explicitly load the new source
         audioRef.current.play()
           .then(() => {
-            if (!audioUnlockedRef.current && soundType !== 'tick') { // Only unlock with non-tick sounds
+            if (soundType !== 'tick' && !audioUnlockedRef.current) {
               audioUnlockedRef.current = true;
+              console.log(`Audio unlocked successfully with ${soundType}.`);
             }
+            // console.log(`${soundType} sound played.`); // Optional: success log
           })
           .catch(e => {
             if (e.name === 'NotAllowedError') {
-              // Don't warn for ticks if audio is not yet unlocked, as this is expected.
               if (soundType !== 'tick') {
-                 console.warn(`Audio play for ${soundType} blocked by browser. User gesture might be needed. Error: ${e.message}`);
+                 console.warn(`Audio play for ${soundType} blocked by browser. User gesture might be needed. Audio remains locked. Error: ${e.message}`);
               }
+              // For tick sounds, being blocked before unlock is expected, so no special warning.
             } else {
               console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundFile} exists at ${basePath}${soundFile}. Base path: '${basePath}'`);
             }
@@ -107,12 +112,15 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const showSystemNotification = useCallback((title: string, body: string) => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      let notificationsEnabled = false;
+      let notificationsEnabled = false; // Default
       try {
         const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
-        notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+        if (notificationsEnabledRaw !== null) {
+             notificationsEnabled = JSON.parse(notificationsEnabledRaw);
+        }
       } catch (error) {
-        console.warn('Failed to access localStorage for notification settings:', error);
+        console.warn('Failed to parse notification settings from localStorage, defaulting to false:', error);
+        notificationsEnabled = false; // Explicitly default on error
       }
 
       if (!notificationsEnabled || Notification.permission !== 'granted') {
@@ -288,11 +296,20 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         return;
     }
 
+    // Attempt to unlock audio now, as this is a user gesture.
+    // Play a sound that's meant to be heard anyway (segmentEnd).
+    // audioUnlockedRef is NOT reset here on purpose for this specific call.
+    // The playSound function itself will try to set audioUnlockedRef if successful.
+    playSound('segmentEnd');
+
+
     if (typeof window !== 'undefined' && 'Notification' in window) {
       let notificationsEnabled = false;
       try {
         const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
-        notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+        if (notificationsEnabledRaw !== null) {
+            notificationsEnabled = JSON.parse(notificationsEnabledRaw);
+        }
       } catch (error) {
         console.warn('Failed to access localStorage for notification settings:', error);
       }
@@ -309,7 +326,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       }
     }
 
-    // audioUnlockedRef is NOT reset here; it's reset on config change or manual reset.
 
     if (timerState.isComplete) {
         const initialSegment = configuration.segments[0];
@@ -330,7 +346,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 totalWorkItemsInSegment: initialSegment.work.length,
             });
             showSystemNotification(`Starting: ${initialSegment.name}`, initialWorkItem);
-            playSound('segmentEnd'); 
+            // playSound('segmentEnd'); // Already called above to attempt unlock
         } else {
              setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
         }
@@ -340,7 +356,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
            const currentSegment = configuration.segments[timerState.currentSegmentIndex];
            const currentWorkItem = currentSegment.work[timerState.currentWorkItemIndex] || "Continuing segment";
            showSystemNotification(`Starting: ${timerState.currentSegmentName}`, currentWorkItem);
-           playSound('segmentEnd');
+           // playSound('segmentEnd'); // Already called above
         }
     }
   };
@@ -351,10 +367,10 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const resumeTimer = () => {
     if (!configuration || configuration.segments.length === 0 || timerState.isComplete) return;
+    
     // Attempt to unlock audio if not already unlocked, as this is a user gesture.
-    if (!audioUnlockedRef.current) {
-        playSound('segmentEnd'); // Use a non-tick sound to attempt unlock
-    }
+    playSound('segmentEnd'); // Use a non-tick sound to attempt unlock
+    
     setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false }));
   };
 
@@ -392,9 +408,12 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     // this playSound call has a good chance of succeeding and unlocking audio if not already.
     moveToNextState();
 
+    // Preserve paused state if skipping while paused
     if (timerState.isPaused && !timerState.isComplete) {
-        setTimerState(prev => ({ ...prev, isRunning: false, isPaused: true}));
+        // No change to isRunning or isPaused needed if already paused
+        // Timer will advance to the next state but remain paused
     } else if (timerState.isRunning && !timerState.isComplete) {
+        // If it was running, it should continue running with the new state
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false}));
     }
   };
