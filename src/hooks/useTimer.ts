@@ -85,7 +85,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         audioRef.current.src = basePath + soundFile;
         audioRef.current.play()
           .then(() => {
-            if (!audioUnlockedRef.current) {
+            if (!audioUnlockedRef.current && soundType !== 'tick') { // Only unlock with non-tick sounds
               audioUnlockedRef.current = true;
             }
           })
@@ -309,10 +309,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       }
     }
 
-    // When the timer starts (user gesture), reset audioUnlockedRef so the first "main" sound
-    // can unlock audio for subsequent ticks.
-    audioUnlockedRef.current = false;
-
+    // audioUnlockedRef is NOT reset here; it's reset on config change or manual reset.
 
     if (timerState.isComplete) {
         const initialSegment = configuration.segments[0];
@@ -333,19 +330,17 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 totalWorkItemsInSegment: initialSegment.work.length,
             });
             showSystemNotification(`Starting: ${initialSegment.name}`, initialWorkItem);
-            // Potentially play a "timer started" sound here if desired, which would unlock audio
-            // playSound('segmentEnd'); // Example: or a dedicated start sound
+            playSound('segmentEnd'); 
         } else {
              setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
         }
     } else {
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
-        if (!timerState.isPaused) {
+        if (!timerState.isPaused) { // Fresh start, not resume
            const currentSegment = configuration.segments[timerState.currentSegmentIndex];
            const currentWorkItem = currentSegment.work[timerState.currentWorkItemIndex] || "Continuing segment";
            showSystemNotification(`Starting: ${timerState.currentSegmentName}`, currentWorkItem);
-           // Potentially play a "timer started/resumed" sound here
-           // playSound('segmentEnd'); // Example
+           playSound('segmentEnd');
         }
     }
   };
@@ -356,8 +351,10 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const resumeTimer = () => {
     if (!configuration || configuration.segments.length === 0 || timerState.isComplete) return;
-    // Similar to startTimer, ensure audio can be unlocked if it wasn't.
-    // If !audioUnlockedRef.current, the first tick might not play, but segmentEnd will try.
+    // Attempt to unlock audio if not already unlocked, as this is a user gesture.
+    if (!audioUnlockedRef.current) {
+        playSound('segmentEnd'); // Use a non-tick sound to attempt unlock
+    }
     setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false }));
   };
 
@@ -391,8 +388,8 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     
-    // When skipping, this is a user gesture. The playSound in moveToNextState should work
-    // and set audioUnlockedRef.
+    // moveToNextState will call playSound. Since skipToNext is a user gesture,
+    // this playSound call has a good chance of succeeding and unlocking audio if not already.
     moveToNextState();
 
     if (timerState.isPaused && !timerState.isComplete) {
@@ -411,3 +408,4 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     skipToNext,
   };
 };
+
