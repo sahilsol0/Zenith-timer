@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -44,11 +43,19 @@ export default function SettingsPage() {
 
 
   useEffect(() => {
-    const storedSound = localStorage.getItem('zenithTimerSoundEnabled');
-    if (storedSound) setSoundEnabled(JSON.parse(storedSound));
+    try {
+      const storedSound = localStorage.getItem('zenithTimerSoundEnabled');
+      if (storedSound) setSoundEnabled(JSON.parse(storedSound));
 
-    const storedNotifs = localStorage.getItem('zenithTimerNotificationsEnabled');
-    if (storedNotifs) setNotificationsEnabled(JSON.parse(storedNotifs));
+      const storedNotifs = localStorage.getItem('zenithTimerNotificationsEnabled');
+      if (storedNotifs) setNotificationsEnabled(JSON.parse(storedNotifs));
+    } catch (error) {
+      console.warn('Failed to load settings from localStorage:', error);
+      // Set default values if localStorage fails
+      setSoundEnabled(true);
+      setNotificationsEnabled(false);
+    }
+    
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setCurrentNotificationPermission(Notification.permission);
@@ -57,30 +64,48 @@ export default function SettingsPage() {
 
   const handleSoundToggle = (checked: boolean) => {
     setSoundEnabled(checked);
-    localStorage.setItem('zenithTimerSoundEnabled', JSON.stringify(checked));
+    try {
+      localStorage.setItem('zenithTimerSoundEnabled', JSON.stringify(checked));
+    } catch (error) {
+      console.warn('Failed to save sound setting to localStorage:', error);
+      toast({ title: "Error Saving Settings", description: "Could not save sound preferences.", variant: "destructive" });
+    }
     toast({ title: 'Sound Settings Updated', description: `Sound notifications are now ${checked ? 'enabled' : 'disabled'}.` });
   };
 
   const handleNotificationsToggle = async (checked: boolean) => {
     setNotificationsEnabled(checked);
-    localStorage.setItem('zenithTimerNotificationsEnabled', JSON.stringify(checked));
+    try {
+      localStorage.setItem('zenithTimerNotificationsEnabled', JSON.stringify(checked));
+    } catch (error) {
+      console.warn('Failed to save notification setting to localStorage:', error);
+      toast({ title: "Error Saving Settings", description: "Could not save notification preferences.", variant: "destructive" });
+    }
   
     if (checked && typeof window !== 'undefined' && 'Notification' in window) {
       let permission = Notification.permission;
       if (permission === 'default') {
-        permission = await Notification.requestPermission();
-        setCurrentNotificationPermission(permission);
+        try {
+            permission = await Notification.requestPermission();
+            setCurrentNotificationPermission(permission);
+        } catch (error) {
+            console.warn('Failed to request notification permission:', error);
+            toast({ title: 'Notification Error', description: 'Could not request notification permission.', variant: 'destructive' });
+            return;
+        }
       }
   
       if (permission === 'granted') {
         toast({ title: 'Notification Settings Updated', description: 'Browser notifications are now enabled.' });
-        // Test notification
         const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-        new Notification("Zenith Timer Notifications", { body: "You will now receive notifications!", icon: basePath + "/icon.png" });
-
+        try {
+            new Notification("Zenith Timer Notifications", { body: "You will now receive notifications!", icon: basePath + "/icon.png" });
+        } catch(e){
+            console.warn("Failed to show test notification", e);
+        }
       } else if (permission === 'denied') {
         toast({ title: 'Notification Permission Denied', description: 'Browser notifications were blocked. You may need to enable them in your browser settings.', variant: 'destructive' });
-      } else { // default, after prompting but user dismissed
+      } else { 
         toast({ title: 'Notification Settings Updated', description: 'Browser notifications enabled, permission pending user action.' });
       }
     } else if (!checked) {
@@ -89,7 +114,15 @@ export default function SettingsPage() {
   };
 
   const handleExportTimers = () => {
-    const customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    let customTimersRaw: string | null = null;
+    try {
+      customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    } catch (error) {
+      console.warn('Failed to access localStorage for exporting timers:', error);
+      toast({ title: "Export Failed", description: "Could not access timer data.", variant: "destructive" });
+      return;
+    }
+
     if (!customTimersRaw || customTimersRaw === "[]") {
       toast({ title: "No Timers to Export", description: "You haven't created any custom timers yet.", variant: "default" });
       return;
@@ -137,7 +170,14 @@ export default function SettingsPage() {
   };
 
   const handleClearAllCustomTimers = () => {
-    localStorage.removeItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    try {
+      localStorage.removeItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    } catch (error) {
+      console.warn('Failed to clear custom timers from localStorage:', error);
+      toast({ title: "Error Clearing Timers", description: "Could not remove timer data.", variant: "destructive" });
+      setShowClearConfirm(false);
+      return;
+    }
     toast({ title: "All Custom Timers Cleared", description: "Your custom timer configurations have been removed." });
     setShowClearConfirm(false);
   };

@@ -21,7 +21,17 @@ function CreateTimerPageContent() {
 
   useEffect(() => {
     if (editId) {
-      const customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+      let customTimersRaw: string | null = null;
+      try {
+        customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+      } catch (e) {
+        console.error("Failed to access custom timers from localStorage:", e);
+        toast({ title: "Error", description: "Could not load timer data.", variant: "destructive" });
+        setIsLoading(false);
+        router.replace('/create');
+        return;
+      }
+
       let foundConfig: TimerConfiguration | undefined = undefined;
       if (customTimersRaw) {
         try {
@@ -29,14 +39,14 @@ function CreateTimerPageContent() {
           foundConfig = customTimers.find(t => t.id === editId);
         } catch (e) {
           console.error("Failed to parse custom timers:", e);
-          toast({ title: "Error", description: "Could not load timer for editing.", variant: "destructive" });
+          toast({ title: "Error", description: "Could not load timer for editing due to corrupted data.", variant: "destructive" });
         }
       }
       
       if (foundConfig) {
         setEditingConfig(foundConfig);
       } else {
-        toast({ title: "Not Found", description: "Timer to edit was not found.", variant: "destructive" });
+        toast({ title: "Not Found", description: "Timer to edit was not found or data is inaccessible.", variant: "destructive" });
         router.replace('/create'); 
       }
     }
@@ -45,7 +55,15 @@ function CreateTimerPageContent() {
 
 
   const handleSaveConfiguration = (newConfig: TimerConfiguration) => {
-    const customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    let customTimersRaw: string | null = null;
+    try {
+      customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    } catch (error) {
+      console.error("Failed to access custom timers from localStorage for saving:", error);
+      toast({ title: "Error Saving", description: "Could not access existing timer data. Your new timer may not be saved correctly with others.", variant: "destructive" });
+      // Allow saving anyway, but it might overwrite or be the only list
+    }
+    
     let customTimers: TimerConfiguration[] = [];
     if (customTimersRaw) {
       try {
@@ -70,7 +88,14 @@ function CreateTimerPageContent() {
       customTimers.push(newConfig);
     }
 
-    localStorage.setItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY, JSON.stringify(customTimers));
+    try {
+      localStorage.setItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY, JSON.stringify(customTimers));
+    } catch (error) {
+      console.error("Failed to save custom timers to localStorage:", error);
+      toast({ title: "Error Saving", description: "Could not save timer data to your browser's storage.", variant: "destructive" });
+      return;
+    }
+
     toast({
       title: `Timer ${editId ? 'Updated' : 'Saved'}!`,
       description: `"${newConfig.name}" has been successfully ${editId ? 'updated' : 'saved'}.`,

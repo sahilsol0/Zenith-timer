@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -40,7 +39,8 @@ const soundFiles = {
   sequenceComplete: '/sounds/sequence_complete.mp3',
 };
 
-const NOTIFICATION_ICON_PATH = '/icon.png'; // User should place an icon.png in /public/
+const NOTIFICATION_ICON_PATH = '/icon.png'; 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''; // Ensure basePath is always a string
 
 export const useTimer = (configuration: TimerConfiguration | null) => {
   const [timerState, setTimerState] = useState<TimerState>(initialTimerState);
@@ -49,7 +49,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize Audio object once on mount
     if (typeof window !== 'undefined') {
       audioRef.current = new Audio();
     }
@@ -57,8 +56,13 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const playSound = useCallback((soundType: 'tick' | 'segmentEnd' | 'sequenceComplete') => {
     if (typeof window !== 'undefined' && audioRef.current) {
-      const soundEnabledRaw = localStorage.getItem('zenithTimerSoundEnabled');
-      const soundEnabled = soundEnabledRaw ? JSON.parse(soundEnabledRaw) : true;
+      let soundEnabled = true; 
+      try {
+        const soundEnabledRaw = localStorage.getItem('zenithTimerSoundEnabled');
+        soundEnabled = soundEnabledRaw ? JSON.parse(soundEnabledRaw) : true;
+      } catch (error) {
+        console.warn('Failed to access localStorage for sound settings:', error);
+      }
 
       if (!soundEnabled) {
         return;
@@ -66,7 +70,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       
       const soundFile = soundFiles[soundType];
       if (soundFile) {
-        const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
         audioRef.current.src = basePath + soundFile;
         audioRef.current.play().catch(e => console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundFile} exists at ${basePath}${soundFile}. Base path: '${basePath}'`));
       } else {
@@ -77,13 +80,17 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const showSystemNotification = useCallback((title: string, body: string) => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
-      const notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+      let notificationsEnabled = false; 
+      try {
+        const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
+        notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+      } catch (error) {
+        console.warn('Failed to access localStorage for notification settings:', error);
+      }
 
       if (!notificationsEnabled || Notification.permission !== 'granted') {
         return;
       }
-      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
       new Notification(title, { body, icon: basePath + NOTIFICATION_ICON_PATH });
     }
   }, []);
@@ -142,35 +149,27 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
     if (isResting) { 
       isResting = false;
-      // Move to the next segment if current one had rest and work items are done,
-      // or if no work items (pure rest segment, although our model implies work then rest)
       if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
          currentWorkItemIndex = 0; 
          currentSegmentIndex++;
       }
-      // If it was resting, it implies the work items for the current segment were completed.
-      // So, we should now set up for the next segment or next work item if the segment itself is multi-work.
-      // The logic below handles advancing segment/work item index.
     } else { 
       currentWorkItemIndex++;
     }
     
-    // Check if work items in the current segment are completed
     if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
-      if (currentSegment.rest > 0 && !isResting) { // !isResting ensures we don't enter rest if we just exited it
+      if (currentSegment.rest > 0 && !isResting) { 
         isResting = true;
         updateTimerDisplay(currentSegment.rest, currentSegment.restString, currentSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest);
         showSystemNotification(`${currentSegment.name} Complete`, `Now: ${currentSegment.restString}`);
         playSound('segmentEnd');
         return;
       }
-      // If no rest or already handled rest, reset work item index and move to next segment
       isResting = false; 
       currentWorkItemIndex = 0; 
       currentSegmentIndex++;
     }
 
-    // Check if all segments are completed
     if (currentSegmentIndex >= configuration.segments.length) {
       if (configuration.repeat) {
         if (configuration.restBetweenSections > 0) {
@@ -197,11 +196,10 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       return;
     }
     
-    // Set up for the next work item or segment
     const nextSegment = configuration.segments[currentSegmentIndex];
-    const nextWorkItemInstruction = nextSegment.work[currentWorkItemIndex]; // This should be valid now
+    const nextWorkItemInstruction = nextSegment.work[currentWorkItemIndex]; 
     updateTimerDisplay(nextSegment.time, nextWorkItemInstruction, nextSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest); 
-    if(!isResting && !isBetweenSectionsRest){ // Avoid double notification if we just came from rest
+    if(!isResting && !isBetweenSectionsRest){ 
       showSystemNotification(`Starting: ${nextSegment.name}`, nextWorkItemInstruction);
     }
     playSound('segmentEnd');
@@ -240,7 +238,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     if (timerState.isRunning && !timerState.isPaused && timerState.timeLeft > 0) {
       timerRef.current = setTimeout(() => {
         setTimerState(prev => ({ ...prev, timeLeft: prev.timeLeft - 1 }));
-        // Play tick sound for last 3 seconds of a work/activity segment (not rest)
         if (timerState.timeLeft <= 4 && timerState.timeLeft > 1 && !timerState.isResting && !timerState.isBetweenSectionsRest) {
           playSound('tick');
         }
@@ -260,10 +257,14 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         return;
     }
 
-    // Request notification permission if not already determined, and notifications are enabled in settings
     if (typeof window !== 'undefined' && 'Notification' in window) {
-      const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
-      const notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+      let notificationsEnabled = false;
+      try {
+        const notificationsEnabledRaw = localStorage.getItem('zenithTimerNotificationsEnabled');
+        notificationsEnabled = notificationsEnabledRaw ? JSON.parse(notificationsEnabledRaw) : false;
+      } catch (error) {
+        console.warn('Failed to access localStorage for notification settings:', error);
+      }
       if (notificationsEnabled && Notification.permission === 'default') {
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
@@ -271,10 +272,11 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
           } else {
             console.log('Notification permission denied.');
           }
+        }).catch(error => {
+          console.warn('Failed to request notification permission:', error);
         });
       }
     }
-
 
     if (timerState.isComplete) { 
         const initialSegment = configuration.segments[0];
@@ -295,12 +297,12 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 totalWorkItemsInSegment: initialSegment.work.length,
             });
             showSystemNotification(`Starting: ${initialSegment.name}`, initialWorkItem);
-        } else { // Should not happen if config is valid
+        } else { 
              setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
         }
     } else {
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
-        if (!timerState.isPaused) { // Only show notification if it's a fresh start, not resume
+        if (!timerState.isPaused) { 
            const currentSegment = configuration.segments[timerState.currentSegmentIndex];
            const currentWorkItem = currentSegment.work[timerState.currentWorkItemIndex] || "Continuing segment";
            showSystemNotification(`Starting: ${timerState.currentSegmentName}`, currentWorkItem);
@@ -347,10 +349,9 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     moveToNextState(); 
 
-    // Maintain paused state if skipping while paused
-    if (timerState.isPaused && !timerState.isComplete) { // Ensure timer is not complete before setting paused
+    if (timerState.isPaused && !timerState.isComplete) { 
         setTimerState(prev => ({ ...prev, isRunning: false, isPaused: true}));
-    } else if (timerState.isRunning && !timerState.isComplete) { // Ensure timer is not complete before setting running
+    } else if (timerState.isRunning && !timerState.isComplete) { 
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false}));
     }
   };

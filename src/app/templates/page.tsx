@@ -30,19 +30,31 @@ export default function TemplatesPage() {
 
 
   useEffect(() => {
-    const storedCustomTimers = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    let storedCustomTimers: string | null = null;
+    try {
+      storedCustomTimers = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+    } catch (error) {
+      console.error("Failed to access custom timers from localStorage:", error);
+      toast({ title: "Error Loading Timers", description: "Could not retrieve your custom timers.", variant: "destructive" });
+    }
+    
     let parsedCustomTimers: TimerConfiguration[] = [];
     if (storedCustomTimers) {
       try {
         parsedCustomTimers = JSON.parse(storedCustomTimers);
       } catch (error) {
         console.error("Failed to parse custom timers from localStorage:", error);
-        localStorage.removeItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY); // Clear corrupted data
+        toast({ title: "Data Error", description: "Your custom timer data might be corrupted. Clearing it.", variant: "destructive" });
+        try {
+          localStorage.removeItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY); // Clear corrupted data
+        } catch (removeError) {
+          console.error("Failed to remove corrupted custom timers from localStorage:", removeError);
+        }
       }
     }
     setCustomTimers(parsedCustomTimers);
     setAllTimers([...TIMER_TEMPLATES, ...parsedCustomTimers]);
-  }, []);
+  }, [toast]);
 
   const handleSelectTemplate = (templateId: string) => {
     router.push(`/timer?templateId=${templateId}`);
@@ -50,7 +62,18 @@ export default function TemplatesPage() {
 
   const handleDeleteCustomTimer = (timerId: string) => {
     const updatedCustomTimers = customTimers.filter(timer => timer.id !== timerId);
-    localStorage.setItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY, JSON.stringify(updatedCustomTimers));
+    try {
+      localStorage.setItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY, JSON.stringify(updatedCustomTimers));
+    } catch (error) {
+      console.error("Failed to save updated custom timers to localStorage:", error);
+      toast({
+          title: "Error Deleting Timer",
+          description: "Could not update timer data in your browser's storage.",
+          variant: "destructive",
+      });
+      setShowDeleteConfirm(null);
+      return;
+    }
     setCustomTimers(updatedCustomTimers);
     setAllTimers([...TIMER_TEMPLATES, ...updatedCustomTimers]);
     toast({

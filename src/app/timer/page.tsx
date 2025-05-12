@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Suspense, useEffect, useState }  from 'react';
@@ -35,7 +34,6 @@ function TimerPageContent() {
 
   useEffect(() => {
     if (!templateId) {
-      // If no templateId, but a timer is already active in context, just show that.
       if (activeConfig) {
         setIsLoading(false);
         setError(null);
@@ -46,27 +44,32 @@ function TimerPageContent() {
       return;
     }
 
-    // If templateId is present, we might be trying to load a new timer or view the current one.
-    // If the current activeConfig matches templateId, no need to reload.
     if (activeConfig && activeConfig.id === templateId) {
       setIsLoading(false);
       setError(null);
       return;
     }
     
-    // Load or find the config based on templateId
     const findConfig = () => {
       let config = TIMER_TEMPLATES.find(t => t.id === templateId);
       if (config) return config;
 
-      const customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+      let customTimersRaw: string | null = null;
+      try {
+        customTimersRaw = localStorage.getItem(LOCAL_STORAGE_CUSTOM_TIMERS_KEY);
+      } catch (e) {
+        console.error("Failed to access custom timers from localStorage:", e);
+        setError("Error loading custom timer configuration data.");
+        return null;
+      }
+
       if (customTimersRaw) {
         try {
           const customTimers: TimerConfiguration[] = JSON.parse(customTimersRaw);
           config = customTimers.find(t => t.id === templateId);
         } catch (e) {
           console.error("Failed to parse custom timers:", e);
-          setError("Error loading custom timer configuration.");
+          setError("Error loading custom timer configuration due to corrupted data.");
         }
       }
       return config || null;
@@ -75,17 +78,16 @@ function TimerPageContent() {
     const configToLoad = findConfig();
 
     if (configToLoad) {
-      setActiveConfig(configToLoad); // Set the new config in the global context
+      setActiveConfig(configToLoad); 
       setError(null);
-    } else {
+    } else if (!error) { // Only set error if findConfig didn't already set one
       setError(`Timer configuration with ID "${templateId}" not found.`);
-      setActiveConfig(null); // Clear any existing active config if not found
+      setActiveConfig(null); 
     }
     setIsLoading(false);
-  }, [templateId, setActiveConfig, activeConfig]);
+  }, [templateId, setActiveConfig, activeConfig, error]); // Added error to dependency array
 
 
-  // Update document title with time left
   useEffect(() => {
     if (timerState.isRunning && !timerState.isPaused) {
       const minutes = Math.floor(timerState.timeLeft / 60);
@@ -119,7 +121,7 @@ function TimerPageContent() {
     );
   }
 
-  if (!activeConfig) { // Changed from selectedConfig to activeConfig from context
+  if (!activeConfig) { 
      return (
         <div className="flex flex-col justify-center items-center min-h-[calc(100vh-200px)] text-center px-4">
             <p className="text-lg sm:text-xl text-foreground/80 mb-4">No timer selected. Please choose one from the templates.</p>
@@ -251,4 +253,3 @@ export default function TimerPage() {
     </Suspense>
   );
 }
-

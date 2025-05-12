@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { PropsWithChildren } from 'react';
@@ -28,16 +27,25 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
 
   // Load stored preferences on mount
   useEffect(() => {
-    const storedMode = localStorage.getItem(LOCAL_STORAGE_THEME_MODE_KEY) as ThemeMode | null;
-    const storedPaletteId = localStorage.getItem(LOCAL_STORAGE_PALETTE_ID_KEY);
+    try {
+      const storedMode = localStorage.getItem(LOCAL_STORAGE_THEME_MODE_KEY) as ThemeMode | null;
+      const storedPaletteId = localStorage.getItem(LOCAL_STORAGE_PALETTE_ID_KEY);
 
-    if (storedMode) {
-      setThemeModeState(storedMode);
-    }
-    if (storedPaletteId && AVAILABLE_PALETTES.some(p => p.id === storedPaletteId)) {
-      setCurrentPaletteIdState(storedPaletteId);
-    } else {
-      // Ensure a valid default palette is set if none/invalid is stored
+      if (storedMode && ['light', 'dark', 'system'].includes(storedMode)) {
+        setThemeModeState(storedMode);
+      } else {
+        setThemeModeState('system'); // Fallback to default if invalid
+      }
+
+      if (storedPaletteId && AVAILABLE_PALETTES.some(p => p.id === storedPaletteId)) {
+        setCurrentPaletteIdState(storedPaletteId);
+      } else {
+        setCurrentPaletteIdState(AVAILABLE_PALETTES[0].id); // Fallback to default
+      }
+    } catch (error) {
+      console.warn('Failed to access localStorage for theme settings:', error);
+      // Fallback to default states if localStorage fails
+      setThemeModeState('system');
       setCurrentPaletteIdState(AVAILABLE_PALETTES[0].id);
     }
   }, []);
@@ -59,9 +67,12 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
     root.classList.add(finalTheme);
     root.dataset.theme = currentPaletteId;
 
-    // Store preferences
-    localStorage.setItem(LOCAL_STORAGE_THEME_MODE_KEY, themeMode);
-    localStorage.setItem(LOCAL_STORAGE_PALETTE_ID_KEY, currentPaletteId);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_THEME_MODE_KEY, themeMode);
+      localStorage.setItem(LOCAL_STORAGE_PALETTE_ID_KEY, currentPaletteId);
+    } catch (error) {
+      console.warn('Failed to save theme settings to localStorage:', error);
+    }
 
   }, [themeMode, currentPaletteId]);
 
@@ -73,9 +84,10 @@ export const ThemeProvider = ({ children }: PropsWithChildren) => {
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
-      setAppliedTheme(mediaQuery.matches ? 'dark' : 'light');
+      const newSystemTheme = mediaQuery.matches ? 'dark' : 'light';
+      setAppliedTheme(newSystemTheme);
       document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(mediaQuery.matches ? 'dark' : 'light');
+      document.documentElement.classList.add(newSystemTheme);
     };
 
     mediaQuery.addEventListener('change', handleChange);
@@ -114,3 +126,4 @@ export const useTheme = (): ThemeContextType => {
   }
   return context;
 };
+
