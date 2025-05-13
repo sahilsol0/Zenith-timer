@@ -1,18 +1,10 @@
 
 import type {NextConfig} from 'next';
 
-const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
-
-let assetPrefix = '';
-let basePath = '';
-
-if (isGithubActions && process.env.GITHUB_REPOSITORY) {
-  // GITHUB_REPOSITORY is in the format <owner>/<repository_name>
-  // We need to extract the <repository_name> for the basePath
-  const repo = process.env.GITHUB_REPOSITORY.replace(/.*?\//, '');
-  assetPrefix = `/${repo}/`;
-  basePath = `/${repo}`;
-}
+// Always use the specific basePath and assetPrefix for sahilsol0.github.io/Zenith-timer/
+const repoName = 'Zenith-timer';
+const assetPrefix = `/${repoName}/`;
+const basePath = `/${repoName}`;
 
 const nextConfig: NextConfig = {
   output: 'export', // Enable static HTML export
@@ -42,4 +34,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
