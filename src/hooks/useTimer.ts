@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -33,17 +34,16 @@ const initialTimerState: TimerState = {
   totalWorkItemsInSegment: 0,
 };
 
+const NOTIFICATION_ICON_PATH = '/icon.png';
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
+// Define soundFiles to include publicBasePath directly
 const soundFiles = {
-  tick: '/sounds/tick.mp3',
-  segmentEnd: '/sounds/segment_end.mp3',
-  sequenceComplete: '/sounds/sequence_complete.mp3',
+  tick: `${publicBasePath}/sounds/tick.mp3`.replace(/\/\//g, '/'), // Avoid double slashes if publicBasePath is '/' or empty
+  segmentEnd: `${publicBasePath}/sounds/segment_end.mp3`.replace(/\/\//g, '/'),
+  sequenceComplete: `${publicBasePath}/sounds/sequence_complete.mp3`.replace(/\/\//g, '/'),
 };
 
-const NOTIFICATION_ICON_PATH = '/icon.png';
-// IMPORTANT: Ensure NEXT_PUBLIC_BASE_PATH is correctly set in your environment,
-// especially for deployments to subpaths (like GitHub Pages).
-// It's configured in next.config.ts
-const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 export const useTimer = (configuration: TimerConfiguration | null) => {
   const [timerState, setTimerState] = useState<TimerState>(initialTimerState);
@@ -59,6 +59,8 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   }, []);
 
   useEffect(() => {
+    // Reset audio unlock state when configuration changes,
+    // as a new timer session starts.
     audioUnlockedRef.current = false;
   }, [configuration]);
 
@@ -79,34 +81,40 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         return;
       }
 
+      // Do not play tick sound if audio is not yet unlocked by a user gesture (non-tick sound)
       if (soundType === 'tick' && !audioUnlockedRef.current) {
         return;
       }
+      
+      const soundPath = soundFiles[soundType]; // This path now includes publicBasePath
 
-      const soundFile = soundFiles[soundType];
-      if (soundFile) {
+      if (soundPath) {
         // Construct absolute URL for the sound file
-        const fullSoundPath = new URL(publicBasePath + soundFile, window.location.origin).href;
+        // soundPath is now already correctly prefixed with publicBasePath (if any)
+        const fullSoundPath = new URL(soundPath, window.location.origin).href;
+        
         // console.log(`Attempting to play audio from: ${fullSoundPath}`); // For debugging path issues
 
         audioRef.current.src = fullSoundPath;
-        audioRef.current.load(); 
+        audioRef.current.load(); // Ensure the new source is loaded
         const playPromise = audioRef.current.play();
 
         if (playPromise !== undefined) {
           playPromise
             .then(() => {
+              // If a non-tick sound plays successfully, consider audio unlocked.
               if (soundType !== 'tick' && !audioUnlockedRef.current) {
                 audioUnlockedRef.current = true;
+                // console.log(`Audio unlocked by playing: ${soundType}`);
               }
             })
             .catch(e => {
               if (e.name === 'NotAllowedError') {
                 if (soundType !== 'tick' && !audioUnlockedRef.current) {
-                   console.warn(`Audio play for ${soundType} blocked by browser. User gesture might be needed. Audio remains locked. Error: ${e.message}`);
+                   console.warn(`Audio play for ${soundType} blocked by browser. User gesture might be needed. Audio remains locked. Path: ${fullSoundPath}. Error: ${e.message}`);
                 }
               } else {
-                console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundFile} exists at ${publicBasePath}${soundFile}. Attempted full path: ${fullSoundPath}`);
+                console.warn(`Audio play failed for ${soundType}:`, e, `Ensure sound file exists at ${soundPath}. Attempted full path: ${fullSoundPath}`);
               }
             });
         }
@@ -114,7 +122,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         console.warn(`Sound file for ${soundType} not defined.`);
       }
     }
-  }, []); 
+  }, []); // Empty dependency array as soundFiles and publicBasePath are from module scope
 
   const showSystemNotification = useCallback((title: string, body: string) => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -195,35 +203,45 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
     if (isResting) {
       isResting = false;
+      // After segment's own rest, if we were at the end of work items, move to next segment.
       if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
          currentWorkItemIndex = 0; 
          currentSegmentIndex++;
       }
+      // If not at end of work items (e.g. rest was for an intermediate work item, though current model is rest after all work items in segment),
+      // then we'd resume with currentWorkItemIndex, which should be handled by the next block.
     } else { 
+      // If not resting, advance work item.
       currentWorkItemIndex++;
     }
 
+    // Check if we've completed all work items in the current segment
     if (currentSegment && currentWorkItemIndex >= currentSegment.work.length) {
+      // If current segment has a rest period and we haven't just finished it (isResting was false before this check)
       if (currentSegment.rest > 0 && !isResting) { 
-        isResting = true;
+        isResting = true; // Enter segment's rest period
         updateTimerDisplay(currentSegment.rest, currentSegment.restString, currentSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest);
         showSystemNotification(`${currentSegment.name} Complete`, `Now: ${currentSegment.restString}`);
         playSound('segmentEnd');
-        return;
+        return; // Timer will continue for this rest period
       }
-      isResting = false; 
-      currentWorkItemIndex = 0; 
+      // If no rest for this segment OR we just finished this segment's rest (isResting would have been true),
+      // then move to the next segment.
+      isResting = false; // Ensure isResting is false as we are moving to a new segment or completing.
+      currentWorkItemIndex = 0; // Reset for the new segment
       currentSegmentIndex++;
     }
 
+    // Check if all segments are completed
     if (currentSegmentIndex >= configuration.segments.length) {
       if (configuration.repeat) {
         if (configuration.restBetweenSections > 0) {
-          isBetweenSectionsRest = true;
+          isBetweenSectionsRest = true; // Enter rest between full sequence repeats
           updateTimerDisplay(configuration.restBetweenSections, "Rest before repeating sequence", "Section Break", 0, 0, false, isBetweenSectionsRest);
           showSystemNotification("Sequence Complete", "Rest before repeating.");
           playSound('segmentEnd');
         } else { 
+          // No rest between sections, repeat immediately
           currentSegmentIndex = 0;
           currentWorkItemIndex = 0;
           isResting = false;
@@ -235,21 +253,24 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
           playSound('segmentEnd');
         }
       } else { 
+        // Not repeating, sequence is complete
         setTimerState(prev => ({ ...prev, isRunning: false, isPaused: false, isComplete: true, description: 'Timer Complete!', timeLeft: 0 }));
         showSystemNotification('Timer Finished!', `${configuration.name} sequence is complete.`);
         playSound('sequenceComplete');
       }
-      return;
+      return; // End of sequence logic
     }
 
+    // If not all segments are completed, set up the next work item/segment
     const nextSegment = configuration.segments[currentSegmentIndex];
     const nextWorkItemInstruction = nextSegment.work[currentWorkItemIndex];
     updateTimerDisplay(nextSegment.time, nextWorkItemInstruction, nextSegment.name, currentWorkItemIndex, currentSegmentIndex, isResting, isBetweenSectionsRest);
     
     if(!isResting && !isBetweenSectionsRest){ 
+      // Only notify for new work/segment start, not for transitions into rest
       showSystemNotification(`Starting: ${nextSegment.name}`, nextWorkItemInstruction);
     }
-    playSound('segmentEnd');
+    playSound('segmentEnd'); // Sound for any transition (segment end, work item end leading to rest, etc.)
 
   }, [configuration, timerState, updateTimerDisplay, playSound, showSystemNotification]);
 
@@ -304,10 +325,13 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         return;
     }
     
+    // Attempt to unlock audio context with a non-tick sound if not already unlocked
+    // This is important because playSound('tick') will not play if audio is locked.
     if (!audioUnlockedRef.current) {
-        playSound('segmentEnd'); 
+        playSound('segmentEnd'); // Play a short, non-intrusive sound to unlock
     }
 
+    // Request notification permission if not already granted or denied
     if (typeof window !== 'undefined' && 'Notification' in window) {
       let notificationsEnabled = false;
       try {
@@ -320,11 +344,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
       }
       if (notificationsEnabled && Notification.permission === 'default') {
         Notification.requestPermission().then(permission => {
-          if (permission === 'granted') {
-            // console.log('Notification permission granted.');
-          } else {
-            // console.log('Notification permission denied.');
-          }
+          // console.log('Notification permission status:', permission);
         }).catch(error => {
           console.warn('Failed to request notification permission:', error);
         });
@@ -333,6 +353,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
 
     if (timerState.isComplete) { 
+        // If restarting a completed timer
         const initialSegment = configuration.segments[0];
         if (initialSegment && initialSegment.work.length > 0) {
             const initialWorkItem = initialSegment.work[0];
@@ -352,10 +373,13 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
             });
             showSystemNotification(`Starting: ${initialSegment.name}`, initialWorkItem);
         } else {
+             // Should not happen if config is valid
              setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
         }
     } else { 
+        // Starting from paused or initial state
         setTimerState(prev => ({ ...prev, isRunning: true, isPaused: false, isComplete: false }));
+        // If it was paused, don't resend notification. Only if truly starting fresh (first time or after reset)
         if (!timerState.isPaused && configuration.segments[timerState.currentSegmentIndex]) { 
            const currentSegment = configuration.segments[timerState.currentSegmentIndex];
            const currentWorkItem = currentSegment.work[timerState.currentWorkItemIndex] || "Continuing segment";
@@ -371,6 +395,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const resumeTimer = () => {
     if (!configuration || configuration.segments.length === 0 || timerState.isComplete) return;
     
+    // Attempt to unlock audio if it wasn't already
     if (!audioUnlockedRef.current) {
         playSound('segmentEnd');
     }
@@ -380,7 +405,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
   const resetTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    audioUnlockedRef.current = false; 
+    audioUnlockedRef.current = false; // Reset audio lock on timer reset
     if (configuration && configuration.segments.length > 0) {
       const initialSegment = configuration.segments[0];
        if (initialSegment && initialSegment.work.length > 0) {
@@ -392,7 +417,7 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 currentSegmentIndex: 0,
                 isResting: false,
                 isBetweenSectionsRest: false,
-                isRunning: false,
+                isRunning: false, // Timer should not start automatically on reset
                 isPaused: false,
                 isComplete: false,
                 totalSegments: configuration.segments.length,
@@ -407,7 +432,9 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   };
 
   const skipToNext = () => {
-    if ((!timerState.isRunning && !timerState.isPaused) && (!configuration || timerState.isComplete) ) {
+    // Allow skip if timer has a config and is not already complete,
+    // or if it's running/paused.
+    if (!configuration || (!timerState.isRunning && !timerState.isPaused && timerState.isComplete)) {
       return; 
     }
 
@@ -415,10 +442,15 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     
     moveToNextState(); 
 
+    // After moveToNextState, if it resulted in completion, update running/paused flags.
     setTimerState(prev => {
       if (prev.isComplete) { 
         return { ...prev, isRunning: false, isPaused: false };
       }
+      // If not complete, and timer was paused, it should remain paused but advanced.
+      // If it was running, it should continue running with the new state.
+      // moveToNextState updates timeLeft, description etc. which triggers useEffect for timerRef.
+      // If it was paused, isPaused flag is still true, so useEffect won't start interval.
       return prev; 
     });
   };
