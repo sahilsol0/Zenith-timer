@@ -33,15 +33,16 @@ const initialTimerState: TimerState = {
   totalWorkItemsInSegment: 0,
 };
 
-const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
-
-const soundFiles = {
-  tick: `${publicBasePath}/sounds/tick.mp3`.replace(/\/+/g, '/'),
-  segmentEnd: `${publicBasePath}/sounds/segment_end.mp3`.replace(/\/+/g, '/'),
-  sequenceComplete: `${publicBasePath}/sounds/sequence_complete.mp3`.replace(/\/+/g, '/'),
+// Define sound file names relative to the 'public' folder structure
+const rawSoundFiles = {
+  tick: 'sounds/tick.mp3',
+  segmentEnd: 'sounds/segment_end.mp3',
+  sequenceComplete: 'sounds/sequence_complete.mp3',
 };
 
-const NOTIFICATION_ICON_PATH = `${publicBasePath}/icon.png`.replace(/\/+/g, '/');
+// Define notification icon path relative to the 'public' folder
+const RAW_NOTIFICATION_ICON_PATH = 'icon.png';
+
 
 export const useTimer = (configuration: TimerConfiguration | null) => {
   const [timerState, setTimerState] = useState<TimerState>(initialTimerState);
@@ -49,22 +50,26 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUnlockedRef = useRef(false);
 
+  const [resolvedBasePath, setResolvedBasePath] = useState<string>('');
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    // This effect runs only on the client, after hydration
+    setResolvedBasePath(process.env.NEXT_PUBLIC_BASE_PATH || '');
+    
+    if (typeof window !== 'undefined' && !audioRef.current) {
       audioRef.current = new Audio();
     }
   }, []);
 
   useEffect(() => {
     if (!configuration) {
-      // Reset to initial state if configuration is removed or becomes null
       setTimerState(initialTimerState);
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
+      audioUnlockedRef.current = false;
       return;
     }
-    // When configuration changes, reset the timer to its initial state for the new config
     const firstSegment = configuration.segments[0];
     if (firstSegment) {
       setTimerState({
@@ -78,13 +83,13 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         totalWorkItemsInSegment: firstSegment.work.length,
       });
     } else {
-      setTimerState(initialTimerState); // Fallback if no segments
+      setTimerState(initialTimerState);
     }
     audioUnlockedRef.current = false;
   }, [configuration]);
 
 
-  const playSound = useCallback((soundType: keyof typeof soundFiles) => {
+  const playSound = useCallback((soundType: keyof typeof rawSoundFiles) => {
     if (typeof window === 'undefined' || !audioRef.current) return;
 
     let soundEnabled = true;
@@ -96,32 +101,26 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     }
 
     if (!soundEnabled) return;
+    if (soundType === 'tick' && !audioUnlockedRef.current) return;
 
-    // Audio unlock is crucial, especially for 'tick'
-    if (!audioUnlockedRef.current && soundType === 'tick') return;
-
-
-    const relativePath = soundFiles[soundType];
-    // Ensure the path is correctly formed, especially if publicBasePath is empty
-    const soundURL = (publicBasePath ? `${publicBasePath.replace(/\/$/, '')}${relativePath}` : relativePath).replace(/\/+/g, '/');
+    const soundFilePath = rawSoundFiles[soundType];
+    // Construct the full URL by prepending the resolvedBasePath
+    const soundURL = `${resolvedBasePath}/${soundFilePath}`.replace(/\/+/g, '/');
     
     audioRef.current.src = soundURL;
-    audioRef.current.load(); // Important for changing sources
+    audioRef.current.load(); 
     audioRef.current.play()
       .then(() => {
-        // Unlock audio for all sounds once any non-tick sound plays successfully after a gesture.
-        // Or if a tick plays and it was already unlocked (or implicitly becomes unlocked by the gesture that started the timer).
         if (soundType !== 'tick') audioUnlockedRef.current = true;
       })
       .catch((e) => {
-        // Don't log NotAllowedError too verbosely, as it's common before user gesture
         if (e.name === 'NotAllowedError') {
            // console.debug(`Audio play for ${soundType} blocked by browser. User gesture might be needed.`);
         } else {
-          console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundURL} exists. Base path: '${publicBasePath}'`);
+          console.warn(`Audio play failed for ${soundType}:`, e, `Ensure ${soundURL} exists.`);
         }
       });
-  }, [publicBasePath]);
+  }, [resolvedBasePath]);
 
   const notify = useCallback((message: string) => {
     if (typeof window === 'undefined' || !('Notification' in window)) return;
@@ -136,17 +135,17 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
     if (!notificationsEnabled || Notification.permission !== 'granted') return;
     
-    const iconPath = (publicBasePath ? `${publicBasePath.replace(/\/$/, '')}${NOTIFICATION_ICON_PATH}` : NOTIFICATION_ICON_PATH).replace(/\/+/g, '/');
+    const iconURL = `${resolvedBasePath}/${RAW_NOTIFICATION_ICON_PATH}`.replace(/\/+/g, '/');
 
     try {
         new Notification('Zenith Timer', {
         body: message,
-        icon: iconPath,
+        icon: iconURL,
         });
     } catch (e) {
-        console.warn("Failed to show notification:", e, `Ensure icon exists at ${iconPath}`);
+        console.warn("Failed to show notification:", e, `Ensure icon exists at ${iconURL}`);
     }
-  }, [publicBasePath]);
+  }, [resolvedBasePath]);
 
 
   const moveToNextState = useCallback((config: TimerConfiguration, currentState: TimerState): TimerState => {
@@ -160,14 +159,12 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
 
     const currentSegment = segments[currentSegmentIndex];
 
-    if (!currentSegment) { // Should ideally not happen if config is valid
+    if (!currentSegment) { 
         return { ...initialTimerState, isComplete: true, description: "Configuration error." };
     }
     
-    // Currently in a work item
     if (!isResting && !isBetweenSectionsRest) {
         if (currentWorkItemIndex < currentSegment.work.length - 1) {
-            // More work items in the current segment
             return {
                 ...currentState,
                 timeLeft: currentSegment.time,
@@ -177,7 +174,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 currentSegmentName: currentSegment.name,
             };
         } else {
-            // Last work item of the current segment, now check for segment rest
             if (currentSegment.rest > 0) {
                 return {
                     ...currentState,
@@ -188,11 +184,9 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                     currentSegmentName: currentSegment.name, 
                 };
             }
-            // No rest in this segment, move to next segment or repeat/complete
             currentSegmentIndex++;
             currentWorkItemIndex = 0;
             if (currentSegmentIndex < segments.length) {
-                // Start next segment
                 return {
                     ...currentState,
                     timeLeft: segments[currentSegmentIndex].time,
@@ -204,20 +198,20 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                     currentSegmentName: segments[currentSegmentIndex].name,
                     totalWorkItemsInSegment: segments[currentSegmentIndex].work.length,
                 };
-            } else { // End of all segments
+            } else { 
                 if (repeat) {
                     if (restBetweenSections > 0) {
                         return {
                             ...currentState,
                             timeLeft: restBetweenSections,
                             description: "Section Break",
-                            currentSegmentIndex: 0, // Will start segment 0 after this break
+                            currentSegmentIndex: 0, 
                             currentWorkItemIndex: 0,
                             isResting: false,
                             isBetweenSectionsRest: true,
-                            currentSegmentName: "Section Break", // Temp name for break
+                            currentSegmentName: "Section Break", 
                         };
-                    } else { // Repeat immediately
+                    } else { 
                         return {
                             ...currentState,
                             timeLeft: segments[0].time,
@@ -230,18 +224,16 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                             totalWorkItemsInSegment: segments[0].work.length,
                         };
                     }
-                } else { // Not repeating, sequence complete
+                } else { 
                     return { ...currentState, isRunning: false, isComplete: true, description: "Complete!", timeLeft: 0 };
                 }
             }
         }
     } 
-    // Currently in segment rest
     else if (isResting) {
         currentSegmentIndex++;
         currentWorkItemIndex = 0;
         if (currentSegmentIndex < segments.length) {
-            // Start next segment
             return {
                 ...currentState,
                 timeLeft: segments[currentSegmentIndex].time,
@@ -253,20 +245,20 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                 currentSegmentName: segments[currentSegmentIndex].name,
                 totalWorkItemsInSegment: segments[currentSegmentIndex].work.length,
             };
-        } else { // End of all segments after a rest
+        } else { 
             if (repeat) {
                 if (restBetweenSections > 0) {
                     return {
                         ...currentState,
                         timeLeft: restBetweenSections,
                         description: "Section Break",
-                        currentSegmentIndex: 0, // Will start segment 0 after this break
+                        currentSegmentIndex: 0, 
                         currentWorkItemIndex: 0,
                         isResting: false,
                         isBetweenSectionsRest: true,
                         currentSegmentName: "Section Break",
                     };
-                } else { // Repeat immediately
+                } else { 
                     return {
                         ...currentState,
                         timeLeft: segments[0].time,
@@ -279,14 +271,12 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
                         totalWorkItemsInSegment: segments[0].work.length,
                     };
                 }
-            } else { // Not repeating, sequence complete
+            } else { 
                 return { ...currentState, isRunning: false, isComplete: true, description: "Complete!", timeLeft: 0 };
             }
         }
     }
-    // Currently in rest between sections (after a full repeat cycle)
     else if (isBetweenSectionsRest) {
-        // Start the first segment of the new cycle
         return {
             ...currentState,
             timeLeft: segments[0].time,
@@ -300,7 +290,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
         };
     }
     
-    // Fallback, should not be reached if logic is correct
     console.error("Timer in unhandled state:", currentState);
     return { ...currentState, isRunning: false, isComplete: true, description: "Error" };
 
@@ -319,25 +308,24 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
           ...prev,
           timeLeft: prev.timeLeft - 1,
         }));
-        if (timerState.timeLeft <= 4 && timerState.timeLeft > 1 && !timerState.isResting && !timerState.isBetweenSectionsRest) { // Play tick for last 3 seconds of work
+        if (timerState.timeLeft <= 4 && timerState.timeLeft > 1 && !timerState.isResting && !timerState.isBetweenSectionsRest) { 
            playSound('tick');
         }
       }, 1000);
-    } else { // Time has reached 0 for the current phase
-      if (timerRef.current) clearTimeout(timerRef.current); // Clear any existing timeout
+    } else { 
+      if (timerRef.current) clearTimeout(timerRef.current); 
 
       const updatedState = moveToNextState(configuration, timerState);
-      setTimerState(updatedState); // Apply the new state immediately
+      setTimerState(updatedState); 
 
-      // Notifications and sounds based on the NEW state
       if (updatedState.isComplete) {
         playSound('sequenceComplete');
         notify(`${configuration.name} complete!`);
       } else if (updatedState.isResting || updatedState.isBetweenSectionsRest) {
         playSound('segmentEnd');
         notify(`Rest: ${updatedState.description}`);
-      } else { // It's a new work item/segment
-        playSound('segmentEnd'); // Sound to indicate start of new work/segment
+      } else { 
+        playSound('segmentEnd'); 
         notify(`${updatedState.currentSegmentName}: ${updatedState.description}`);
       }
     }
@@ -350,11 +338,10 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
   const startTimer = useCallback(() => {
     if (!configuration) return;
     
-    // Ensure audio context is available for iOS, etc.
     if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => audioRef.current?.pause()).catch(() => {});
     }
-    audioUnlockedRef.current = true; // User gesture happened
+    audioUnlockedRef.current = true; 
 
     const firstSegment = configuration.segments[0];
     if (!firstSegment) {
@@ -382,7 +369,6 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
             console.warn("Notification permission request failed:", err);
         });
     }
-    // Initial sound for starting the very first segment/work item
     playSound('segmentEnd'); 
     notify(`${firstSegment.name}: ${firstSegment.work[0] || "Starting task..."}`);
 
@@ -392,15 +378,14 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    setTimerState((prev) => ({ ...prev, isPaused: true, isRunning: true })); // isRunning should remain true
+    setTimerState((prev) => ({ ...prev, isPaused: true, isRunning: true })); 
   };
 
   const resumeTimer = () => {
-     // Ensure audio context is available for iOS, etc.
     if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => audioRef.current?.pause()).catch(() => {});
     }
-    audioUnlockedRef.current = true; // User gesture happened
+    audioUnlockedRef.current = true; 
 
     setTimerState((prev) => ({ ...prev, isPaused: false, isRunning: true }));
   };
@@ -409,11 +394,10 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-    // Reset to the beginning of the current configuration, not to a blank state.
     if (configuration) {
         const firstSegment = configuration.segments[0];
          setTimerState({
-            ...initialTimerState, // Resets isRunning, isPaused, isComplete etc.
+            ...initialTimerState, 
             timeLeft: firstSegment ? firstSegment.time : 0,
             description: firstSegment ? (firstSegment.work[0] || 'Ready') : 'No segments',
             currentSegmentName: firstSegment ? firstSegment.name : '',
@@ -421,42 +405,38 @@ export const useTimer = (configuration: TimerConfiguration | null) => {
             currentWorkItemIndex: 0,
             totalSegments: configuration.segments.length,
             totalWorkItemsInSegment: firstSegment ? firstSegment.work.length : 0,
-            isRunning: false, // Timer is reset, not running.
+            isRunning: false, 
             isPaused: false,
             isComplete: false,
         });
     } else {
-        setTimerState(initialTimerState); // Full reset if no config
+        setTimerState(initialTimerState); 
     }
-    audioUnlockedRef.current = false; // Require gesture again after reset
+    audioUnlockedRef.current = false; 
   };
 
   const skipToNext = useCallback(() => {
     if (!configuration || timerState.isComplete) return;
-     // Ensure audio context is available for iOS, etc.
     if (audioRef.current && audioRef.current.paused) {
         audioRef.current.play().then(() => audioRef.current?.pause()).catch(() => {});
     }
-    audioUnlockedRef.current = true; // User gesture happened
+    audioUnlockedRef.current = true; 
 
     if (timerRef.current) clearTimeout(timerRef.current);
     
     const updatedState = moveToNextState(configuration, { 
       ...timerState, 
-      // Ensure timeLeft is treated as 0 to force transition,
-      // but retain other aspects of current state for context.
       timeLeft: 0 
     });
     setTimerState(updatedState);
 
-    // Notifications and sounds based on the NEW state after skip
     if (updatedState.isComplete) {
       playSound('sequenceComplete');
       notify(`${configuration.name} complete!`);
     } else if (updatedState.isResting || updatedState.isBetweenSectionsRest) {
       playSound('segmentEnd');
       notify(`Skipped to Rest: ${updatedState.description}`);
-    } else { // It's a new work item/segment
+    } else { 
       playSound('segmentEnd');
       notify(`Skipped to ${updatedState.currentSegmentName}: ${updatedState.description}`);
     }
